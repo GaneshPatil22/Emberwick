@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Life in Weeks — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FDF6EE; --paper-2:#FBEFE3;
+    --ink:#34262C; --ink-soft:#7B6A6F; --ink-faint:#A99AA0;
+    --line:rgba(52,38,44,.10); --line-2:rgba(52,38,44,.16);
+    --accent:#F0567A; --accent-ink:#B62E51;
+    --bronze:#C0763A; --silver:#98A0AD; --gold:#F2A72C; --diamond:#31BFD6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:"DM Sans",system-ui,sans-serif;
+    background:radial-gradient(120% 90% at 50% 0%, #EFE8DE 0%, #E4DACE 100%);
+    color:var(--ink);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;
+    -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+  .phone{width:390px;height:820px;background:var(--paper);border-radius:46px;position:relative;overflow:hidden;
+    box-shadow:0 30px 70px -20px rgba(52,38,44,.45),0 0 0 10px #241a1e,0 0 0 11px #3a2c31;touch-action:none}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#241a1e;border-radius:0 0 16px 16px;z-index:60}
+  .status{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:500;z-index:55}
+  .status .dots{display:flex;gap:5px}.status .dots i{width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.85;display:block}
+
+  .screen{position:absolute;inset:0;top:50px;bottom:74px;display:flex;flex-direction:column;
+    opacity:0;visibility:hidden;transform:scale(.985);will-change:transform,opacity;
+    transition:opacity .4s ease, transform .46s cubic-bezier(.19,1,.22,1), visibility .4s}
+  .screen.active{opacity:1;visibility:visible;transform:none}
+
+  .head{padding:20px 24px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .title{font-family:"Gabarito",sans-serif;font-weight:800;font-size:28px;line-height:1.02;letter-spacing:-.015em}
+  .sub{font-size:13.5px;color:var(--ink-soft);margin-top:5px;max-width:210px;line-height:1.35}
+  .jarbtn{flex:none;width:46px;height:46px;border-radius:15px;border:none;cursor:pointer;background:var(--paper-2);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 var(--line-2),inset 0 0 0 1px var(--line);transition:transform .15s}
+  .jarbtn:active{transform:scale(.9)}.jarbtn svg{width:24px;height:24px}
+  .backbtn{border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px;padding:4px 0}
+  .backbtn svg{width:18px;height:18px}
+
+  .gridwrap{flex:1;overflow:hidden;padding:6px 24px 8px}
+  .lifegrid{display:grid;grid-template-columns:repeat(52,1fr);gap:1.5px;position:relative}
+  .cell{aspect-ratio:1;border-radius:2px;background:rgba(52,38,44,.06);cursor:pointer;transition:transform .12s}
+  .cell:active{transform:scale(.8)}
+  .cell.ahead{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+  .cell.now{background:var(--accent);animation:beat 2.4s ease-in-out infinite}
+  .cell.b-bronze{background:var(--bronze);box-shadow:0 0 5px rgba(192,118,58,.55)}
+  .cell.b-silver{background:var(--silver);box-shadow:0 0 5px rgba(152,160,173,.5)}
+  .cell.b-gold{background:var(--gold);box-shadow:0 0 6px rgba(242,167,44,.6)}
+  .cell.b-diamond{background:var(--diamond);box-shadow:0 0 9px 1px rgba(49,191,214,.75);animation:twinkle 3s ease-in-out infinite}
+  .band{position:absolute;left:-6px;right:-6px;border-radius:7px;pointer-events:none;z-index:-1}
+  @keyframes beat{0%,100%{box-shadow:0 0 6px 1px rgba(240,86,122,.5)}50%{box-shadow:0 0 13px 3px rgba(240,86,122,.85)}}
+  @keyframes twinkle{0%,100%{box-shadow:0 0 8px 1px rgba(49,191,214,.6)}50%{box-shadow:0 0 14px 3px rgba(49,191,214,.95)}}
+  @keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+  .lifegrid.in .cell{animation:pop .5s cubic-bezier(.2,.9,.3,1.2) backwards}
+
+  .legend{display:flex;flex-wrap:wrap;gap:9px 14px;padding:14px 24px 4px}
+  .lg{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft)}
+  .lg .sw{width:11px;height:11px;border-radius:3px}
+  .hint{padding:6px 24px 0;font-size:12px;color:var(--ink-faint);display:flex;align-items:center;gap:6px;
+    transition:opacity .6s;animation:hintpulse 2.6s ease-in-out infinite}
+  @keyframes hintpulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+  .yeargrid{flex:1;overflow:hidden;padding:8px 24px;display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-content:start}
+  .wk{aspect-ratio:1;border-radius:9px;background:rgba(52,38,44,.06);cursor:pointer;transition:transform .14s}
+  .wk:active{transform:scale(.88)}
+  .wk.ahead{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
+  .wk.now{background:var(--accent);box-shadow:0 0 12px rgba(240,86,122,.55)}
+  .wk.b-bronze{background:var(--bronze);box-shadow:0 3px 10px -2px rgba(192,118,58,.6)}
+  .wk.b-silver{background:var(--silver);box-shadow:0 3px 10px -2px rgba(152,160,173,.55)}
+  .wk.b-gold{background:var(--gold);box-shadow:0 3px 12px -2px rgba(242,167,44,.65)}
+  .wk.b-diamond{background:var(--diamond);box-shadow:0 3px 14px -2px rgba(49,191,214,.7)}
+
+  .weekbody{flex:1;overflow:auto;padding:4px 24px 20px}
+  .erachip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--accent-ink);background:rgba(240,86,122,.12);padding:5px 12px;border-radius:20px}
+  .weektitle{font-family:"Gabarito",sans-serif;font-weight:700;font-size:24px;margin:12px 0 2px}
+  .weekmeta{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+  .entry{background:#fff;border-radius:16px;padding:15px 16px;margin-bottom:12px;box-shadow:0 4px 16px -8px rgba(52,38,44,.28),inset 0 0 0 1px var(--line);animation:rise .5s cubic-bezier(.19,1,.22,1) backwards}
+  .entry:nth-child(3){animation-delay:.06s}.entry:nth-child(4){animation-delay:.12s}.entry:nth-child(5){animation-delay:.18s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .entry .top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .pill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+  .pill.gold{background:rgba(242,167,44,.18);color:#9A6710}
+  .dot{width:9px;height:9px;border-radius:3px}
+  .kind{font-size:11px;color:var(--ink-faint);font-weight:500;display:flex;align-items:center;gap:6px}.kind svg{width:14px;height:14px}
+  .e-title{font-family:"Gabarito",sans-serif;font-weight:600;font-size:16.5px}
+  .e-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-top:3px}
+  .photo{margin-top:11px;height:76px;border-radius:11px;background:linear-gradient(135deg,#FBEFE3,#F5E0CE);display:flex;align-items:center;justify-content:center;color:var(--ink-faint)}.photo svg{width:22px;height:22px}
+  .addbtn{width:100%;padding:13px;border:none;border-radius:14px;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:14.5px;font-weight:500;color:#fff;background:var(--accent);display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 6px 16px -6px rgba(240,86,122,.7);transition:transform .14s}
+  .addbtn:active{transform:scale(.97)}.addbtn svg{width:17px;height:17px}
+  .addbtn.ghost{background:transparent;color:var(--ink-soft);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+
+  .jarscreen{align-items:center}
+  .jarbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 30px;width:100%;position:relative}
+  .jarglow{position:absolute;top:32%;width:270px;height:270px;border-radius:50%;background:radial-gradient(circle,rgba(242,167,44,.24),transparent 66%);filter:blur(6px);animation:breathe 5s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+  .jar{width:176px;height:214px;position:relative;cursor:pointer;transition:transform .12s;z-index:2}
+  .jar:active{transform:scale(.96)}
+  .jar.shaking{animation:shake .55s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes shake{10%,90%{transform:rotate(-3deg)}20%,80%{transform:rotate(4deg)}30%,50%,70%{transform:rotate(-8deg)}40%,60%{transform:rotate(8deg)}}
+  .jar svg{width:100%;height:100%;overflow:visible}
+  .orb{transform-box:fill-box;transform-origin:center;animation:bob 3.8s ease-in-out infinite}
+  .jar.shaking .orb{animation:jiggle .55s ease-in-out}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
+  @keyframes jiggle{0%,100%{transform:translateY(0)}25%{transform:translateY(-12px) translateX(5px)}55%{transform:translateY(-5px) translateX(-6px)}80%{transform:translateY(-9px) translateX(3px)}}
+  .jartitle{font-family:"Gabarito",sans-serif;font-weight:700;font-size:24px;margin-top:16px;text-align:center}
+  .jarsub{font-size:13.5px;color:var(--ink-soft);text-align:center;margin-top:4px;max-width:250px;line-height:1.4}
+  .jaractions{display:flex;flex-direction:column;gap:10px;width:100%;padding:20px 30px 8px}
+
+  .reveal{position:absolute;inset:0;background:rgba(52,38,44,.38);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:34px;z-index:40;opacity:0;visibility:hidden;transition:opacity .32s}
+  .reveal.show{opacity:1;visibility:visible}
+  .revealcard{position:relative;background:var(--paper);border-radius:24px;padding:26px 22px 20px;width:100%;text-align:center;transform:scale(.78) translateY(14px);transition:transform .48s cubic-bezier(.18,1.1,.28,1.2);box-shadow:0 24px 60px -18px rgba(52,38,44,.6);overflow:hidden}
+  .reveal.show .revealcard{transform:none}
+  .cardglow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:180px;height:180px;border-radius:50%;filter:blur(30px);opacity:.5}
+  .orbwrap{position:relative;width:80px;height:80px;margin:2px auto 16px}
+  .revealorb{width:80px;height:80px;border-radius:50%;position:relative;z-index:2}
+  .reveal.show .revealorb{animation:orbIn .6s cubic-bezier(.2,.9,.3,1.35)}
+  @keyframes orbIn{0%{transform:scale(0) rotate(-50deg);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+  .ripple{position:absolute;inset:0;border-radius:50%;z-index:1}
+  .reveal.show .ripple{animation:ripple .9s ease-out forwards}
+  @keyframes ripple{0%{transform:scale(.5);opacity:.55}100%{transform:scale(2.2);opacity:0}}
+  .confetti{position:absolute;top:38px;left:50%;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:3}
+  .rc-meta{font-size:12px;color:var(--ink-faint);margin-bottom:5px;text-transform:capitalize}
+  .rc-title{font-family:"Gabarito",sans-serif;font-weight:800;font-size:23px;line-height:1.1}
+  .rc-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-top:8px}
+  .rc-close{margin-top:18px;border:none;background:none;color:var(--accent-ink);font-weight:500;font-size:14px;cursor:pointer}
+
+  .tabs{position:absolute;bottom:0;left:0;right:0;height:74px;background:rgba(253,246,238,.9);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding-bottom:10px;z-index:50}
+  .tab{flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-faint);font-size:11px;font-weight:500;font-family:"DM Sans",sans-serif;transition:color .2s}
+  .tab svg{width:24px;height:24px;transition:transform .2s}.tab.on{color:var(--accent)}.tab.on svg{transform:translateY(-2px)}
+
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+
+  <section class="screen active" id="s-grid">
+    <div class="head">
+      <div><div class="title">Your life</div><div class="sub" id="grid-sub">Every glowing week is a moment worth keeping.</div></div>
+      <button class="jarbtn" onclick="showTop('s-jar')" aria-label="Open your jar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C0763A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8M9 3v3.5L5.5 13a4 4 0 0 0 3.6 5.9h5.8A4 4 0 0 0 18.5 13L15 6.5V3"/><circle cx="10.5" cy="14" r="1" fill="#F2A72C" stroke="none"/><circle cx="13.5" cy="16" r="1" fill="#31BFD6" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="gridwrap"><div class="lifegrid in" id="lifegrid"></div></div>
+    <div class="legend" id="legend"></div>
+    <div class="hint" id="hint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+      Pinch or tap a week to zoom in
+    </div>
+  </section>
+
+  <section class="screen" id="s-year">
+    <div class="head"><div>
+      <button class="backbtn" onclick="zoomOutTo(0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Life</button>
+      <div class="title" id="year-title" style="margin-top:6px">Age 32</div>
+    </div></div>
+    <div class="yeargrid" id="yeargrid"></div>
+  </section>
+
+  <section class="screen" id="s-week">
+    <div class="head"><button class="backbtn" onclick="zoomOutTo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span id="week-back">Age 32</span></button></div>
+    <div class="weekbody">
+      <span class="erachip"><span class="dot" style="background:var(--accent)"></span>First job</span>
+      <div class="weektitle">A week worth keeping</div>
+      <div class="weekmeta">Three things happened here.</div>
+      <div class="entry">
+        <div class="top"><span class="dot" style="background:var(--gold)"></span><span class="pill gold">Gold win</span></div>
+        <div class="e-title">Got the senior role</div><div class="e-body">Six months of work paid off. Called mum right after.</div>
+        <div class="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 16l-5-5L5 19"/></svg></div>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="kind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Note</span></div>
+        <div class="e-title">Quiet weekend at home</div><div class="e-body">Rain all Sunday. Read most of the day.</div>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="kind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 18a5 5 0 0 0-1-9.9A6 6 0 0 0 4.5 11 4 4 0 0 0 6 18z"/></svg>A hard week</span></div>
+        <div class="e-title">Grandad passed</div><div class="e-body">Drove home for the funeral. Glad I got to say goodbye.</div>
+      </div>
+      <button class="addbtn" style="margin-top:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add to this week</button>
+    </div>
+  </section>
+
+  <section class="screen jarscreen" id="s-jar">
+    <div class="head" style="width:100%"><div class="title">Your jar</div></div>
+    <div class="jarbody">
+      <div class="jarglow"></div>
+      <div class="jar" id="jar" onclick="shake()">
+        <svg viewBox="0 0 176 214">
+          <path d="M58 6h60M64 6v34L36 96c-9 20 6 44 28 44h48c22 0 37-24 28-44L112 40V6" fill="rgba(255,255,255,.5)" stroke="#C9B49E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="54" y="2" width="68" height="10" rx="5" fill="#C9B49E"/>
+          <circle class="orb" style="animation-delay:0s" cx="68" cy="112" r="9" fill="#F2A72C"/>
+          <circle class="orb" style="animation-delay:.4s" cx="94" cy="120" r="11" fill="#C0763A"/>
+          <circle class="orb" style="animation-delay:.8s" cx="112" cy="108" r="8" fill="#31BFD6"/>
+          <circle class="orb" style="animation-delay:.2s" cx="80" cy="98" r="7" fill="#98A0AD"/>
+          <circle class="orb" style="animation-delay:.6s" cx="100" cy="100" r="6" fill="#F2A72C"/>
+          <circle class="orb" style="animation-delay:1s" cx="74" cy="126" r="6" fill="#31BFD6"/>
+        </svg>
+      </div>
+      <div class="jartitle">41 good moments inside</div>
+      <div class="jarsub">Shake to relive one you might have forgotten.</div>
+    </div>
+    <div class="jaractions">
+      <button class="addbtn" onclick="shake()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>Shake for a memory</button>
+      <button class="addbtn ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a win</button>
+    </div>
+    <div class="reveal" id="reveal" onclick="closeReveal(event)">
+      <div class="revealcard">
+        <div class="cardglow" id="cardglow"></div>
+        <div class="orbwrap"><div class="ripple" id="ripple"></div><div class="revealorb" id="revealorb"></div></div>
+        <div class="rc-meta" id="rc-meta"></div>
+        <div class="rc-title" id="rc-title"></div>
+        <div class="rc-body" id="rc-body"></div>
+        <button class="rc-close" onclick="closeReveal(event,true)">Put it back</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab on" id="tab-map" onclick="showTop('s-grid')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Map</button>
+    <button class="tab" id="tab-jar" onclick="showTop('s-jar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8M9 3v3.5L5.5 13a4 4 0 0 0 3.6 5.9h5.8A4 4 0 0 0 18.5 13L15 6.5V3"/></svg>Jar</button>
+  </nav>
+</div>
+
+<script>
+const COLS=52,ROWS=52,LIVED_ROWS=32,LIVED_EXTRA=20,WIN_THRESHOLD=50,WIN_COUNT=41;
+const tiers=[{k:'bronze',label:'Bronze'},{k:'silver',label:'Silver'},{k:'gold',label:'Gold'},{k:'diamond',label:'Diamond'}];
+const tierColor={bronze:'#C0763A',silver:'#98A0AD',gold:'#F2A72C',diamond:'#31BFD6'};
+const el=id=>document.getElementById(id);
+
+if(WIN_COUNT>=WIN_THRESHOLD) el('grid-sub').textContent=WIN_COUNT+' good moments and counting.';
+
+function seeded(s){return function(){s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
+const rnd=seeded(11),mem={};let placed=0;
+while(placed<WIN_COUNT){const r=Math.floor(rnd()*LIVED_ROWS),c=Math.floor(rnd()*COLS);
+  if(r===LIVED_ROWS&&c>=LIVED_EXTRA)continue;const key=r*100+c;if(mem[key])continue;
+  const t=rnd();let ti;if(t<0.05)ti=3;else if(t<0.30)ti=2;else if(t<0.62)ti=1;else ti=0;mem[key]=tiers[ti].k;placed++;}
+const eras=[{s:18,e:21,color:'rgba(49,191,214,.10)'},{s:22,e:31,color:'rgba(242,167,44,.10)'}];
+
+const lg=el('lifegrid');
+(function buildGrid(){
+  const frag=document.createDocumentFragment();
+  eras.forEach(er=>{const b=document.createElement('div');b.className='band';
+    b.style.top='calc('+er.s+' * (100% - '+(ROWS-1)*1.5+'px) / '+ROWS+' + '+er.s*1.5+'px)';
+    b.style.height='calc('+(er.e-er.s+1)+' * (100% - '+(ROWS-1)*1.5+'px) / '+ROWS+')';
+    b.style.background=er.color;lg.appendChild(b);});
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const cel=document.createElement('div');cel.className='cell';
+    const ahead=r>LIVED_ROWS||(r===LIVED_ROWS&&c>=LIVED_EXTRA),now=r===LIVED_ROWS&&c===LIVED_EXTRA,key=r*100+c;
+    if(now)cel.classList.add('now');else if(ahead)cel.classList.add('ahead');else if(mem[key])cel.classList.add('b-'+mem[key]);
+    cel.onclick=(e)=>openYear(r,e.currentTarget);
+    cel.style.animationDelay=(Math.min(r,20)*14+c*1.2)+'ms';frag.appendChild(cel);
+  }
+  lg.appendChild(frag);
+})();
+setTimeout(()=>lg.classList.remove('in'),1400);
+
+const legendItems=[...tiers.map(t=>({c:tierColor[t.k],l:t.label})),{c:'var(--accent)',l:'This week'},{c:'',l:'Ahead',ahead:true}];
+el('legend').innerHTML=legendItems.map(i=>`<span class="lg"><span class="sw" style="${i.ahead?'box-shadow:inset 0 0 0 1.5px var(--line-2)':'background:'+i.c}"></span>${i.l}</span>`).join('');
+
+const yg=el('yeargrid');
+function buildYear(){yg.innerHTML='';
+  const yearMem={5:'gold',11:'bronze',12:'silver',23:'diamond',24:'bronze',38:'gold',39:'silver',40:'bronze',47:'gold'};
+  for(let i=0;i<52;i++){const w=document.createElement('div');w.className='wk';
+    if(i===19)w.classList.add('now');else if(i>44)w.classList.add('ahead');else if(yearMem[i])w.classList.add('b-'+yearMem[i]);
+    w.onclick=(e)=>openWeek(e.currentTarget);yg.appendChild(w);}
+}
+buildYear();
+
+/* ---------- zoom engine: life(0) -> year(1) -> week(2) ---------- */
+const order=['s-grid','s-year','s-week'];let level=0,animating=false;
+function originOf(elm){const p=el('phone').getBoundingClientRect();const r=elm.getBoundingClientRect();
+  return [(r.left+r.width/2-p.left)/p.width*100,(r.top+r.height/2-p.top)/p.height*100];}
+function flip(fromLvl,toLvl,ox,oy,dir){
+  if(animating)return;animating=true;
+  const from=el(order[fromLvl]),to=el(order[toLvl]);
+  from.style.transformOrigin=ox+'% '+oy+'%';to.style.transformOrigin=ox+'% '+oy+'%';
+  to.style.transition='none';to.style.transform='scale('+(dir==='in'?.55:1.55)+')';to.style.opacity='0';
+  to.classList.add('active');to.style.visibility='visible';void to.offsetWidth;to.style.transition='';
+  requestAnimationFrame(()=>{to.style.transform='';to.style.opacity='';
+    from.style.transform='scale('+(dir==='in'?2.8:.45)+')';from.style.opacity='0';});
+  setTimeout(()=>{from.classList.remove('active');from.style.transform='';from.style.opacity='';from.style.transformOrigin='';to.style.transformOrigin='';animating=false;},480);
+  level=toLvl;syncTabs();
+}
+function openYear(row,cellEl){const[ox,oy]=cellEl?originOf(cellEl):[50,42];
+  el('year-title').textContent='Age '+row;el('week-back').textContent='Age '+row;flip(0,1,ox,oy,'in');}
+function openWeek(cellEl){const[ox,oy]=cellEl?originOf(cellEl):[50,42];flip(1,2,ox,oy,'in');}
+function zoomOutTo(target){if(level<=target)return;flip(level,target,50,42,'out');}
+function zoomInFrom(){if(level>=2)return;if(level===0)openYear(32,null);else openWeek(null);}
+function syncTabs(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el(level>=0&&order[level]!=='s-jar'?'tab-map':'tab-jar').classList.add('on');}
+
+/* top-level tab switch (Map <-> Jar) */
+function showTop(id){
+  const cur=document.querySelector('.screen.active');if(cur&&cur.id===id&&id!=='s-grid')return;
+  if(id==='s-grid'){ // collapse any zoom back to life
+    document.querySelectorAll('.screen').forEach(s=>{if(s.id!=='s-grid'){s.classList.remove('active');s.style.cssText='';}});
+    el('s-grid').classList.add('active');level=0;
+  } else {
+    document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.cssText='';});
+    el(id).classList.add('active');
+  }
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el(id==='s-jar'?'tab-jar':'tab-map').classList.add('on');
+}
+
+/* ---------- pinch gestures: trackpad (ctrl+wheel) + touch ---------- */
+let pinchAcc=0;
+el('phone').addEventListener('wheel',e=>{
+  if(!e.ctrlKey)return;e.preventDefault();
+  if(document.querySelector('.screen.active').id==='s-jar')return;
+  pinchAcc+=-e.deltaY;
+  if(pinchAcc>55){zoomInFrom();pinchAcc=0;}
+  if(pinchAcc<-55){zoomOutTo(Math.max(0,level-1));pinchAcc=0;}
+},{passive:false});
+let startDist=null;
+const d2=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+el('phone').addEventListener('touchstart',e=>{if(e.touches.length===2)startDist=d2(e.touches);},{passive:false});
+el('phone').addEventListener('touchmove',e=>{if(e.touches.length===2&&startDist){e.preventDefault();}},{passive:false});
+el('phone').addEventListener('touchend',e=>{
+  if(startDist&&e.touches.length<2){const active=document.querySelector('.screen.active').id;
+    if(active!=='s-jar'&&e.changedTouches.length){}startDist=null;}},{passive:false});
+el('phone').addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&startDist){const r=d2(e.touches)/startDist;
+    if(r>1.28){zoomInFrom();startDist=null;}else if(r<0.78){zoomOutTo(Math.max(0,level-1));startDist=null;}}},{passive:false});
+setTimeout(()=>{const h=el('hint');if(h)h.style.opacity='0';},6000);
+
+/* ---------- jar shake + upgraded reveal ---------- */
+const wins=[
+  {tier:'gold',meta:'2 years ago',title:'Got the senior role',body:'Six months of work paid off. Called mum right after.'},
+  {tier:'diamond',meta:'4 years ago',title:'She said yes',body:'On the beach at sunset. My hands were shaking.'},
+  {tier:'bronze',meta:'8 months ago',title:'Ran my first 10k',body:'Slow, but I finished without stopping once.'},
+  {tier:'silver',meta:'3 years ago',title:'Shipped the app',body:'Two months of late nights. It finally went live.'},
+  {tier:'gold',meta:'5 years ago',title:'Moved into our place',body:'Empty rooms, pizza on the floor. Felt like everything.'}
+];
+let lastWin=-1,shaking=false;
+function shake(){if(shaking)return;shaking=true;const jar=el('jar');jar.classList.add('shaking');
+  if(navigator.vibrate)navigator.vibrate([20,40,30]);
+  setTimeout(()=>{jar.classList.remove('shaking');revealWin();shaking=false;},560);}
+function spawnConfetti(color,count){
+  const card=document.querySelector('.revealcard');
+  const palette=[color,'#FFFFFF',color,'#F0567A'];
+  for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti';
+    p.style.background=palette[i%palette.length];
+    const ang=(Math.random()*Math.PI)-Math.PI/2, dist=60+Math.random()*120;
+    const tx=Math.cos(ang)*dist*(Math.random()<.5?-1:1), ty=Math.sin(ang)*dist-30+Math.random()*80;
+    p.style.transform='translate(-50%,0)';p.style.opacity='1';
+    p.style.transition='transform '+(700+Math.random()*400)+'ms cubic-bezier(.15,.7,.3,1), opacity 900ms ease-out';
+    card.appendChild(p);
+    requestAnimationFrame(()=>{p.style.transform='translate(calc(-50% + '+tx+'px),'+ty+'px) rotate('+(Math.random()*360)+'deg)';p.style.opacity='0';});
+    setTimeout(()=>p.remove(),1300);
+  }
+}
+function revealWin(){
+  let i;do{i=Math.floor(Math.random()*wins.length);}while(i===lastWin&&wins.length>1);lastWin=i;
+  const w=wins[i],col=tierColor[w.tier];
+  el('revealorb').style.background='radial-gradient(circle at 35% 30%, #ffffffcc, '+col+' 60%)';
+  el('revealorb').style.boxShadow='0 0 30px 6px '+col+'cc, 0 10px 24px -6px '+col;
+  el('ripple').style.background=col;
+  el('cardglow').style.background=col;
+  el('rc-meta').textContent=w.meta+' · '+w.tier;
+  el('rc-title').textContent=w.title;el('rc-body').textContent=w.body;
+  el('reveal').classList.add('show');
+  if(navigator.vibrate)navigator.vibrate(w.tier==='diamond'?[0,50,40,60]:30);
+  const count=w.tier==='diamond'?38:w.tier==='gold'?28:18;
+  setTimeout(()=>spawnConfetti(col,count),180);
+}
+function closeReveal(e,force){if(force||e.target.id==='reveal')el('reveal').classList.remove('show');}
+window.addEventListener('devicemotion',e=>{const a=e.accelerationIncludingGravity;if(!a)return;
+  const mag=Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0);
+  if(mag>34&&document.querySelector('.screen.active').id==='s-jar')shake();});
+</script>
+</body>
+</html>
