@@ -17,6 +17,7 @@ import SwiftUI
 struct LifeGridInteractiveView: View {
     let snapshot: GridSnapshot
     let entries: [Entry]
+    let bands: [EraBand]
     let rowCount: Int
     var zoomNamespace: Namespace.ID
     let onOpenYear: (Int) -> Void
@@ -48,7 +49,7 @@ struct LifeGridInteractiveView: View {
         Color.clear
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .topLeading) {
-                LifeGridView(snapshot: snapshot, rowCount: rowCount)
+                LifeGridView(snapshot: snapshot, bands: bands, rowCount: rowCount)
                     .frame(width: content.width, height: content.height)
                     .overlay {
                         if let sourcePosition {

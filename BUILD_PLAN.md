@@ -16,7 +16,7 @@
 | 1 | Full-life grid render (demo persona) | ✅ **done** | Glowing life grid renders on launch from seeded data |
 | 2 | Zoom navigation (life → year → week) | ✅ **done** | Tap/pinch to fly between levels |
 | 3 | Week page + add/edit entries | ✅ **done** | Add a win → grid lights up, persists |
-| 4 | Eras (tint bands) | ⬜ | Create an era → band appears behind grid |
+| 4 | Eras (tint bands) | ✅ **done** | Create an era → band appears behind grid |
 | 5 | The Jar (shake + reveal + haptics) | ⬜ | Shake → a past win is revealed |
 | 6 | Home logic + Settings | ⬜ | App opens to Jar or Grid adaptively |
 | 7 | Resurfacing ("a year ago") | ⬜ | A past win resurfaces in context |
@@ -145,7 +145,19 @@
 
 ---
 
-## ⬜ Phase 4 — Eras (tint bands)
+## ✅ Phase 4 — Eras (COMPLETE)
+
+**Delivered:** pure `EraBandCalculator.bands(eras:birthYear:rowCount:)` → `[EraBand]` (row ranges, clamped); `LifeGridView` draws the bands **behind** the cells in the Canvas (low-saturation tint at ~0.55 so wins pop above); `EraEditView` create sheet (name, start/end `DatePicker`s, soft-tint swatch picker from `EraTints`) persisted via SwiftData; an **add-era button** in the life header. Bands thread `MapView → LifeLevelView → LifeGridInteractiveView → LifeGridView`. Week-page era chip was already added in Phase 3.
+
+**Verified:** builds clean; the 3 seeded eras render as bands behind the grid in the simulator.
+
+**Untested here (needs your tap):** the create-era sheet flow (open → name/dates/tint → save → new band appears). Standard Form sheet; please try it on-device.
+
+---
+
+<details><summary>Original Phase 4 plan (for reference)</summary>
+
+## Phase 4 — Eras (tint bands)
 
 **Goal:** span-level context behind the point-level wins.
 
@@ -160,6 +172,8 @@
 **Tests:** unit-test `eraBands` row-range math (incl. partial-year edges). Visual review of contrast (wins must stay dominant).
 
 **Future hooks:** `EraBand` is a value type → richer narrative era treatment (Phase F) extends rendering only.
+
+</details>
 
 ---
 

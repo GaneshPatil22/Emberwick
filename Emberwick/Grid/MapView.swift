@@ -12,13 +12,22 @@ import SwiftUI
 
 struct MapView: View {
     @Query private var entries: [Entry]
+    @Query private var eras: [Era]
 
     @Namespace private var zoomNamespace
     @State private var path: [MapRoute] = []
 
+    private var birthYear: Int {
+        GridMath.year(for: AppConfig.defaultBirthDate)
+    }
+
+    private var bands: [EraBand] {
+        EraBandCalculator.bands(eras: eras, birthYear: birthYear, rowCount: GridConstants.lifespanYears)
+    }
+
     var body: some View {
         NavigationStack(path: $path) {
-            LifeLevelView(snapshot: snapshot, entries: entries, zoomNamespace: zoomNamespace) { row in
+            LifeLevelView(snapshot: snapshot, entries: entries, bands: bands, zoomNamespace: zoomNamespace) { row in
                 path.append(.year(row))
             }
             .navigationDestination(for: MapRoute.self) { route in
