@@ -25,4 +25,21 @@ extension Color {
         let value = UInt(hexString, radix: 16) ?? 0
         self.init(hex: value, opacity: opacity)
     }
+
+    /// An appearance-adaptive color that resolves to `light` or `dark` per the
+    /// current interface style.
+    init(light: Color, dark: Color) {
+        #if canImport(UIKit)
+        self = Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
+        })
+        #else
+        self = light
+        #endif
+    }
+
+    /// Adaptive color from packed `0xRRGGBB` values for light and dark.
+    init(lightHex: UInt, darkHex: UInt) {
+        self.init(light: Color(hex: lightHex), dark: Color(hex: darkHex))
+    }
 }

@@ -9,8 +9,11 @@ import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
+
     var body: some View {
-        MapView()
+        RootView()
+            .preferredColorScheme(appearanceMode.colorScheme)
     }
 }
 

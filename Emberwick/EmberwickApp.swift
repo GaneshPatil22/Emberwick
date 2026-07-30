@@ -15,7 +15,9 @@ struct EmberwickApp: App {
     init() {
         let container = EmberwickModelContainer.shared()
         #if DEBUG
-        DemoSeeder.seedIfEmpty(context: container.mainContext, persona: .standard)
+        if !CommandLine.arguments.contains("-skipSeed") {
+            DemoSeeder.seedIfEmpty(context: container.mainContext, persona: .standard)
+        }
         #endif
         self.container = container
     }

@@ -14,6 +14,8 @@ struct LifeGridView: View {
     let bands: [EraBand]
     let rowCount: Int
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         Canvas { context, size in
             let metrics = GridCanvasMetrics(
@@ -40,7 +42,8 @@ struct LifeGridView: View {
     private func drawBand(_ band: EraBand, metrics: GridCanvasMetrics, context: inout GraphicsContext) {
         // Text-selection-style range: the start row runs from its start column to the
         // row end, middle rows are full width, the end row runs to its end column.
-        let tint = Color(hexString: band.tintHex).opacity(0.55)
+        // The stored tints are light pastels, so dim them heavily in dark mode.
+        let tint = Color(hexString: band.tintHex).opacity(colorScheme == .dark ? 0.20 : 0.55)
         for row in band.start.row...band.end.row {
             let firstColumn = (row == band.start.row) ? band.start.column : 0
             let lastColumn = (row == band.end.row) ? band.end.column : GridConstants.columnsPerYear - 1

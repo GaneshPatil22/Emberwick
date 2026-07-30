@@ -17,12 +17,24 @@ struct LifeLevelView: View {
 
     @State private var showEras = false
 
+    private var winCount: Int {
+        entries.count(where: { $0.kind == .win })
+    }
+
+    // Win count stays hidden until a threshold so a sparse early grid doesn't
+    // demotivate — a warm line shows instead.
+    private var subtitle: String {
+        winCount >= HomeConstants.hideWinCountThreshold
+            ? "\(winCount) good moments and counting."
+            : "Every glowing week is a moment worth keeping."
+    }
+
     var body: some View {
         VStack(spacing: EmberSpacing.md) {
             HStack(alignment: .top) {
                 GridHeaderView(
                     title: "Your life",
-                    subtitle: "Every glowing week is a moment worth keeping."
+                    subtitle: subtitle
                 )
                 Spacer(minLength: EmberSpacing.sm)
                 addEraButton

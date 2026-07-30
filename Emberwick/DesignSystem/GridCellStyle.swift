@@ -32,7 +32,7 @@ extension GridCellState {
     /// Outline color for unlived cells, else `nil`.
     var strokeColor: Color? {
         switch self {
-        case .ahead: EmberPalette.line
+        case .ahead: EmberPalette.cellAhead
         default: nil
         }
     }

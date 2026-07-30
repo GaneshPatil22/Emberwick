@@ -21,6 +21,9 @@ final class Entry {
     var imageData: [Data]
     /// Wins only, optional. `nil` means an unrated win.
     var tier: Tier?
+    /// When this win was last surfaced by the Jar. `nil` = never seen. Drives the
+    /// weighted shake (long-unseen wins are favored). Never used to delete anything.
+    var lastSeenAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -29,7 +32,8 @@ final class Entry {
         title: String,
         notes: String? = nil,
         imageData: [Data] = [],
-        tier: Tier? = nil
+        tier: Tier? = nil,
+        lastSeenAt: Date? = nil
     ) {
         self.id = id
         self.date = date
@@ -38,6 +42,7 @@ final class Entry {
         self.notes = notes
         self.imageData = imageData
         self.tier = tier
+        self.lastSeenAt = lastSeenAt
     }
 
     /// Only wins are eligible to be surfaced by the Jar.

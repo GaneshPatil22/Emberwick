@@ -17,10 +17,10 @@
 | 2 | Zoom navigation (life → year → week) | ✅ **done** | Tap/pinch to fly between levels |
 | 3 | Week page + add/edit entries | ✅ **done** | Add a win → grid lights up, persists |
 | 4 | Eras (tint bands) | ✅ **done** | Create an era → band appears behind grid |
-| 5 | The Jar (shake + reveal + haptics) | ⬜ | Shake → a past win is revealed |
-| 6 | Home logic + Settings | ⬜ | App opens to Jar or Grid adaptively |
+| 5 | The Jar (shake + reveal + haptics) | ✅ **done** | Shake → a past win is revealed |
+| 6 | Home logic + Settings | ✅ **done** | App opens to Jar or Grid adaptively |
 | 7 | Resurfacing ("a year ago") | ⬜ | A past win resurfaces in context |
-| 8 | Onboarding + polish pass | ⬜ | First-run backfill; reduce-motion; empty states |
+| 8 | Onboarding + polish pass | ✅ **mostly** | First-run backfill; reduce-motion; empty states |
 | 9 | Ship prep | ⬜ | Icon, metadata, privacy, TestFlight build |
 | F | Future (post-v1) | 🔮 | CloudKit, export, threads, widget, … |
 
@@ -177,7 +177,25 @@
 
 ---
 
-## ⬜ Phase 5 — The Jar (shake + reveal + haptics)
+## ✅ Phases 5, 6, 8 (COMPLETE / mostly) — built together
+
+**Phase 5 — The Jar.** `JarView` (glass jar + glowing tier orbs via `JarIllustration`, "N good moments inside", Shake + Add-a-win). Pure `JarSelector` weighted pick favoring long-unseen wins (new `Entry.lastSeenAt` timestamp, set on reveal — never deletes). `RevealView` — tier-scaled glow orb + context ("2 years ago · Bronze") + "Put it back", with tier-scaled `sensoryFeedback` haptics. `ShakeDetector` (CoreMotion) for device shake. Reuses `EntryEditView` for Add-a-win. Verified: Jar + reveal render in the simulator.
+
+**Phase 6 — Home shell + Settings.** `RootView` = Map / Jar `TabView` bottom bar; adaptive initial tab (`HomeMode` in `@AppStorage`, `HomeConstants.jarToGridThreshold`); `SettingsView` (Home mode: Adaptive/Jar/Grid) via a Jar gear; grid win count hidden until `hideWinCountThreshold` (warm subtitle otherwise). `ContentView` → `RootView`.
+
+**Phase 8 — Onboarding + polish.** `OnboardingView` first-run milestone backfill (empty store only); `EmberMotion` animation tokens; Reduce Motion honored (intro, reveal, jar orbs); empty states (empty jar, empty week). Verified onboarding renders.
+
+**Untested here (need device):** device-shake, haptics, and the tap-driven shake→reveal / tab-switch / add-win / settings flows — no gesture/haptic automation in this env. Build verified; static states screenshotted.
+
+**Deferred (noted):** ignite-on-add grid micro-animation (hard with Canvas); richer particle reveal; CHHaptics custom tier patterns (using `sensoryFeedback` for now); onboarding historical-date backfill (milestones land on the current week — there's no date field yet); app icon (Phase 9).
+
+**Dev flags (DEBUG):** `-openJar` (start on Jar), `-skipSeed` (empty store to see onboarding).
+
+---
+
+<details><summary>Original Phase 5–8 plans (for reference)</summary>
+
+## Phase 5 — The Jar (shake + reveal + haptics)
 
 **Goal:** the payoff — rediscover a forgotten win, with tier-scaled delight.
 
@@ -254,6 +272,8 @@ The **memory-flight intro** is done ahead of Phase 8. On each cold launch of the
 **Done & testable when:** fresh install walks through backfill and lands on a living grid; adding a win visibly ignites its cell; toggling Reduce Motion swaps to calm transitions; VoiceOver reads the grid sensibly.
 
 **Tests:** accessibility pass (manual + audit). Onboarding flow reviewed.
+
+</details>
 
 ---
 
