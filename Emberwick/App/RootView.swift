@@ -10,13 +10,25 @@ import SwiftData
 import SwiftUI
 
 struct RootView: View {
+    /// While the splash is still on screen, hold off presenting onboarding — a
+    /// full-screen cover would otherwise appear above (and hide) the splash.
+    var splashActive: Bool = false
+
     @Query private var entries: [Entry]
     @AppStorage("homeMode") private var homeMode: HomeMode = .adaptive
     @AppStorage("didOnboard") private var didOnboard = false
 
     @State private var selectedTab: AppTab = .map
     @State private var didSetInitialTab = false
-    @State private var showOnboarding = false
+    @State private var didApplyDebugFlags = false
+    @State private var firstRunStep: FirstRunStep?
+
+    /// First-run gates, presented in order. The intro is optional (skippable); the
+    /// birthday is required — the app can't proceed without it.
+    private enum FirstRunStep: Int, Identifiable {
+        case intro, birthday
+        var id: Int { rawValue }
+    }
 
     private var winCount: Int {
         entries.count(where: { $0.kind == .win })
@@ -32,19 +44,47 @@ struct RootView: View {
             }
         }
         .tint(EmberPalette.accentInk)
-        .task {
+        .task(id: splashActive) {
+            applyDebugFlagsIfNeeded()
             setInitialTabIfNeeded()
-            showOnboardingIfNeeded()
+            advanceFirstRun()
         }
-        .fullScreenCover(isPresented: $showOnboarding, onDismiss: { didOnboard = true }) {
-            OnboardingView()
+        .fullScreenCover(item: $firstRunStep, onDismiss: advanceFirstRun) { step in
+            switch step {
+            case .intro: OnboardingFlow()
+            case .birthday: BirthdayGate()
+            }
         }
     }
 
-    private func showOnboardingIfNeeded() {
-        if !didOnboard, entries.isEmpty {
-            showOnboarding = true
-        }
+    /// Resolves the next required first-run screen: the (optional) intro, then the
+    /// (required) birthday gate. Re-runs each time a step is dismissed until the app
+    /// is cleared to open. Never presents while the splash is still up.
+    private func advanceFirstRun() {
+        guard !splashActive else { return }
+        firstRunStep = nextFirstRunStep()
+    }
+
+    private func nextFirstRunStep() -> FirstRunStep? {
+        if shouldShowIntro { return .intro }
+        if !AppConfig.isBirthDateSet { return .birthday } // hard requirement
+        return nil
+    }
+
+    private var shouldShowIntro: Bool {
+        #if DEBUG
+        if CommandLine.arguments.contains("-onboard") { return !didOnboard }
+        #endif
+        return !didOnboard && entries.isEmpty
+    }
+
+    /// DEBUG: `-onboard` replays the intro by clearing the completion flag once.
+    private func applyDebugFlagsIfNeeded() {
+        #if DEBUG
+        guard !didApplyDebugFlags else { return }
+        didApplyDebugFlags = true
+        if CommandLine.arguments.contains("-onboard") { didOnboard = false }
+        #endif
     }
 
     private func setInitialTabIfNeeded() {

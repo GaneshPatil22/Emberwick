@@ -26,20 +26,39 @@ extension Color {
         self.init(hex: value, opacity: opacity)
     }
 
-    /// An appearance-adaptive color that resolves to `light` or `dark` per the
-    /// current interface style.
-    init(light: Color, dark: Color) {
+    /// Adaptive color from packed `0xRRGGBB` values for light and dark.
+    ///
+    /// SwiftUI resolves colors on its ASYNC render thread during animations. The
+    /// dynamic provider must therefore be `nonisolated` and build the `UIColor` from
+    /// raw components — never bridge a SwiftUI `Color` and never let the closure be
+    /// inferred `@MainActor` (the module defaults to MainActor isolation), or it trips
+    /// a concurrency assertion off-main (EXC_BREAKPOINT).
+    init(lightHex: UInt, darkHex: UInt) {
         #if canImport(UIKit)
-        self = Color(UIColor { traits in
-            traits.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
-        })
+        self = Color(emberDynamicColor(lightHex: lightHex, darkHex: darkHex))
         #else
-        self = light
+        self = Color(hex: lightHex)
         #endif
     }
+}
 
-    /// Adaptive color from packed `0xRRGGBB` values for light and dark.
-    init(lightHex: UInt, darkHex: UInt) {
-        self.init(light: Color(hex: lightHex), dark: Color(hex: darkHex))
+#if canImport(UIKit)
+import UIKit
+
+private extension UIColor {
+    /// From a packed `0xRRGGBB` value using components only — no SwiftUI bridging.
+    convenience init(rgbHex hex: UInt) {
+        let red = CGFloat((hex >> 16) & 0xFF) / 255
+        let green = CGFloat((hex >> 8) & 0xFF) / 255
+        let blue = CGFloat(hex & 0xFF) / 255
+        self.init(red: red, green: green, blue: blue, alpha: 1)
     }
 }
+
+/// `nonisolated` so the dynamic provider closure is NOT tied to the main actor.
+private nonisolated func emberDynamicColor(lightHex: UInt, darkHex: UInt) -> UIColor {
+    UIColor { traits in
+        UIColor(rgbHex: traits.userInterfaceStyle == .dark ? darkHex : lightHex)
+    }
+}
+#endif

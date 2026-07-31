@@ -19,7 +19,7 @@
 | 4 | Eras (tint bands) | ✅ **done** | Create an era → band appears behind grid |
 | 5 | The Jar (shake + reveal + haptics) | ✅ **done** | Shake → a past win is revealed |
 | 6 | Home logic + Settings | ✅ **done** | App opens to Jar or Grid adaptively |
-| 7 | Resurfacing ("a year ago") | ⬜ | A past win resurfaces in context |
+| 7 | Resurfacing ("a year ago") | ✅ **done** | A past win resurfaces in context |
 | 8 | Onboarding + polish pass | ✅ **mostly** | First-run backfill; reduce-motion; empty states |
 | 9 | Ship prep | ⬜ | Icon, metadata, privacy, TestFlight build |
 | F | Future (post-v1) | 🔮 | CloudKit, export, threads, widget, … |
@@ -233,7 +233,17 @@
 
 ---
 
-## ⬜ Phase 7 — Resurfacing ("you did this a year ago")
+## ✅ Phase 7 — Resurfacing (COMPLETE)
+
+**Delivered:** pure `ResurfacingSelector.resurfaced(wins:today:)` — a win from a previous year within ±4 days of today's day-of-year (same week), preferring the most recent such anniversary (own win, never a quote). `ResurfacingCard` — a warm, dismissible surface on the home (orb + "You did this a year ago" + win title + ✕); tapping opens that week (`MapView` pushes year → week). Session-dismissible; theme-adaptive. Verified in the simulator.
+
+**Note:** the "years ago" text is data-driven (most recent matching week-anniversary) — in the random demo it showed "18 years ago"; real recent wins yield "a year ago" etc.
+
+---
+
+<details><summary>Original Phase 7 plan (for reference)</summary>
+
+## Phase 7 — Resurfacing ("you did this a year ago")
 
 **Goal:** gentle, own-life motivation — never quotes.
 
@@ -246,6 +256,8 @@
 **Tests:** unit-test the anniversary/selection logic (injected `today`).
 
 **Future hooks:** same selection powers the Lock Screen widget (Phase F) and negative-space prompts (Phase F).
+
+</details>
 
 ---
 

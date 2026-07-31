@@ -6,6 +6,7 @@
 //  legend. Header and legend stay fixed as chrome; the grid zooms/pans between them.
 //
 
+import SwiftData
 import SwiftUI
 
 struct LifeLevelView: View {
@@ -14,11 +15,21 @@ struct LifeLevelView: View {
     let bands: [EraBand]
     var zoomNamespace: Namespace.ID
     let onOpenYear: (Int) -> Void
+    let onOpenResurfaced: (GridPosition) -> Void
 
+    @Environment(\.modelContext) private var modelContext
+    @AppStorage(AppConfig.birthDateKey) private var birthInterval = 0.0
     @State private var showEras = false
+    /// Frozen for the session so the card doesn't vanish once it's marked seen.
+    @State private var resurfaced: Entry?
+    @State private var didPickResurfaced = false
+
+    private var birthDate: Date {
+        AppConfig.birthDate(interval: birthInterval)
+    }
 
     private var winCount: Int {
-        entries.count(where: { $0.kind == .win })
+        entries.validWins(bornOn: birthDate).count
     }
 
     // Win count stays hidden until a threshold so a sparse early grid doesn't
@@ -39,6 +50,15 @@ struct LifeLevelView: View {
                 Spacer(minLength: EmberSpacing.sm)
                 addEraButton
             }
+
+            if let win = resurfaced {
+                ResurfacingCard(
+                    win: win,
+                    onOpen: { openResurfaced(win) },
+                    onDismiss: { resurfaced = nil }
+                )
+            }
+
             LifeGridInteractiveView(
                 snapshot: snapshot,
                 entries: entries,
@@ -58,6 +78,28 @@ struct LifeLevelView: View {
         .sheet(isPresented: $showEras) {
             EraListView()
         }
+        .task(id: entries.isEmpty) {
+            pickResurfacedIfNeeded()
+        }
+    }
+
+    /// Picks the resurfacing win once (when entries are available), marks it seen so
+    /// it won't resurface again, and freezes it for the session.
+    private func pickResurfacedIfNeeded() {
+        guard !didPickResurfaced, !entries.isEmpty else { return }
+        didPickResurfaced = true
+        guard let win = ResurfacingSelector.resurfaced(
+            wins: entries.validWins(bornOn: birthDate),
+            today: .now
+        ) else { return }
+        win.resurfacedAt = .now
+        try? modelContext.save()
+        resurfaced = win
+    }
+
+    private func openResurfaced(_ win: Entry) {
+        let birthYear = GridMath.year(for: birthDate)
+        onOpenResurfaced(GridMath.position(for: win.date, birthYear: birthYear))
     }
 
     private var addEraButton: some View {

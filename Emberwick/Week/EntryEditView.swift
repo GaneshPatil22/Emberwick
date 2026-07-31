@@ -121,6 +121,7 @@ struct EntryEditView: View {
                 tier: resolvedTier
             )
             modelContext.insert(entry)
+            if kind == .win { SoundPlayer.play(.winSaved) }
         }
 
         try? modelContext.save()

@@ -171,9 +171,10 @@ struct LifeGridInteractiveView: View {
 
     private func startIntroIfNeeded() {
         guard !didStartIntro, !reduceMotion, viewport.width > 1, viewport.height > 1 else { return }
-        let birthYear = GridMath.year(for: AppConfig.defaultBirthDate)
+        let birthDate = AppConfig.birthDate
+        let birthYear = GridMath.year(for: birthDate)
         let plans = IntroFlightPlanner.plans(
-            entries: entries,
+            entries: entries.validWins(bornOn: birthDate), // skip pre-birth wins
             snapshot: snapshot,
             birthYear: birthYear,
             launchWindow: introLaunchWindow

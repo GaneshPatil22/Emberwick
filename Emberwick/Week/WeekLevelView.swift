@@ -18,10 +18,11 @@ struct WeekLevelView: View {
 
     @Query private var allEntries: [Entry]
     @Query private var eras: [Era]
+    @AppStorage(AppConfig.birthDateKey) private var birthInterval = 0.0
     @State private var sheet: EntrySheet?
 
     private var birthYear: Int {
-        GridMath.year(for: AppConfig.defaultBirthDate)
+        GridMath.year(for: AppConfig.birthDate(interval: birthInterval))
     }
 
     private var weekDate: Date {

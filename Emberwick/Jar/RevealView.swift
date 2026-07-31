@@ -2,19 +2,27 @@
 //  RevealView.swift
 //  Emberwick
 //
-//  The reveal after a shake: a tier-glowing card with the win's context ("2 years
-//  ago"), title, and notes, plus "Put it back" (which never deletes). Haptic and
-//  glow scale with the tier. Honors Reduce Motion.
+//  The staged reveal after a shake:
+//    1. a brief glow beat while the memory sits at the bottom of the jar,
+//    2. it rises up and out of the jar's mouth (small),
+//    3. travels to center,
+//    4. then grows and the card's text fades in — revealed.
+//  "Put it back" plays the same stages in reverse, sending it back down into the jar.
+//  Honors Reduce Motion (snaps straight to revealed / dismissed).
 //
 
 import SwiftUI
 
 struct RevealView: View {
     let win: Entry
+    let jarSize: CGSize
     let onPutBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var appeared = false
+
+    private enum Stage { case bottom, mouth, center, revealed }
+    @State private var stage: Stage = .bottom
+    @State private var isClosing = false
 
     private var tierColor: Color { win.tier?.color ?? EmberPalette.memoryNeutral }
 
@@ -36,12 +44,31 @@ struct RevealView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.35)
+            Color.black.opacity(dimOpacity)
                 .ignoresSafeArea()
-                .onTapGesture(perform: onPutBack)
+                .onTapGesture(perform: putBack)
 
+            card
+                .scaleEffect(cardScale)
+                .position(cardPoint)
+
+            if stage == .revealed && !reduceMotion {
+                ConfettiBurst(tier: win.tier, origin: burstOrigin)
+            }
+        }
+        .task { await animateIn() }
+        .sensoryFeedback(hapticFeedback, trigger: stage == .revealed)
+        .onChange(of: stage) { _, newStage in
+            if newStage == .revealed { SoundPlayer.play(.reveal(win.tier)) }
+        }
+    }
+
+    // MARK: - Card
+
+    private var card: some View {
+        VStack(spacing: EmberSpacing.md) {
+            orb
             VStack(spacing: EmberSpacing.md) {
-                orb
                 Text(metaText)
                     .font(EmberTypography.caption)
                     .foregroundStyle(EmberPalette.inkFaint)
@@ -55,26 +82,17 @@ struct RevealView: View {
                         .foregroundStyle(EmberPalette.inkSoft)
                         .multilineTextAlignment(.center)
                 }
-                Button("Put it back", action: onPutBack)
+                Button("Put it back", action: putBack)
                     .font(EmberTypography.body)
                     .foregroundStyle(EmberPalette.accentInk)
                     .padding(.top, EmberSpacing.sm)
             }
-            .padding(EmberSpacing.xl)
-            .frame(maxWidth: .infinity)
-            .background(EmberPalette.paper, in: .rect(cornerRadius: EmberRadius.xLarge))
-            .padding(EmberSpacing.xl)
-            .scaleEffect(appeared || reduceMotion ? 1 : 0.8)
-            .opacity(appeared || reduceMotion ? 1 : 0)
+            .opacity(stage == .revealed ? 1 : 0) // text appears only once grown
         }
-        .onAppear {
-            if reduceMotion {
-                appeared = true
-            } else {
-                withAnimation(EmberMotion.reveal) { appeared = true }
-            }
-        }
-        .sensoryFeedback(hapticFeedback, trigger: appeared)
+        .padding(EmberSpacing.xl)
+        .frame(maxWidth: .infinity)
+        .background(EmberPalette.paper.opacity(stage == .bottom ? 0 : 1), in: .rect(cornerRadius: EmberRadius.xLarge))
+        .padding(EmberSpacing.xl)
     }
 
     private var orb: some View {
@@ -88,7 +106,81 @@ struct RevealView: View {
                 )
             )
             .frame(width: 80, height: 80)
-            .shadow(color: tierColor.opacity(0.8), radius: glowRadius)
+            .shadow(color: tierColor.opacity(0.85), radius: glowRadius)
+    }
+
+    // MARK: - Stage geometry
+
+    private var cardPoint: CGPoint {
+        let x = jarSize.width / 2
+        switch stage {
+        case .bottom: return CGPoint(x: x, y: jarSize.height * 0.50) // deep in the jar
+        case .mouth: return CGPoint(x: x, y: jarSize.height * 0.30)  // up through the mouth
+        case .center, .revealed: return CGPoint(x: x, y: jarSize.height * 0.42)
+        }
+    }
+
+    /// The revealed orb sits above the card's center; the confetti pops from there.
+    private var burstOrigin: CGPoint {
+        CGPoint(x: jarSize.width / 2, y: jarSize.height * 0.34)
+    }
+
+    private var cardScale: Double {
+        switch stage {
+        case .bottom: 0.26
+        case .mouth: 0.42
+        case .center: 0.6
+        case .revealed: 1.0
+        }
+    }
+
+    private var dimOpacity: Double {
+        switch stage {
+        case .bottom: 0
+        case .mouth: 0.12
+        case .center: 0.26
+        case .revealed: 0.35
+        }
+    }
+
+    // MARK: - Animation
+
+    // Sequenced with Task.sleep instead of nested withAnimation-completion handlers
+    // (the latter crashes the async renderer). Cancellation-safe via `.task`.
+    private func animateIn() async {
+        guard !reduceMotion else {
+            stage = .revealed
+            return
+        }
+        try? await Task.sleep(for: .seconds(0.35)) // glow beat at the bottom
+        if Task.isCancelled { return }
+        withAnimation(.easeOut(duration: 0.55)) { stage = .mouth }   // rise out the mouth
+        try? await Task.sleep(for: .seconds(0.55))
+        if Task.isCancelled { return }
+        withAnimation(.easeInOut(duration: 0.4)) { stage = .center } // travel to center
+        try? await Task.sleep(for: .seconds(0.4))
+        if Task.isCancelled { return }
+        withAnimation(EmberMotion.reveal) { stage = .revealed }      // grow + reveal
+    }
+
+    private func putBack() {
+        guard !isClosing else { return }
+        isClosing = true
+        Task { await animateOut() }
+    }
+
+    private func animateOut() async {
+        guard !reduceMotion else {
+            onPutBack()
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.4)) { stage = .center } // shrink back to the orb
+        try? await Task.sleep(for: .seconds(0.4))
+        withAnimation(.easeInOut(duration: 0.4)) { stage = .mouth }  // back up to the mouth
+        try? await Task.sleep(for: .seconds(0.4))
+        withAnimation(.easeIn(duration: 0.5)) { stage = .bottom }    // down into the jar
+        try? await Task.sleep(for: .seconds(0.5))
+        onPutBack()
     }
 
     private var hapticFeedback: SensoryFeedback {

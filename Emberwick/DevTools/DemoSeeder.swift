@@ -24,7 +24,7 @@ enum DemoSeeder {
         var rng = SeededRandomNumberGenerator(seed: persona.seed)
         let calendar = Calendar.current
         let today = Date.now
-        let birthDate = AppConfig.defaultBirthDate
+        let birthDate = AppConfig.birthDate
 
         let earliest = calendar.date(byAdding: .year, value: persona.firstActiveAge, to: birthDate) ?? birthDate
         let maxDaysAgo = max(1, calendar.dateComponents([.day], from: earliest, to: today).day ?? 3650)

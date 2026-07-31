@@ -46,8 +46,9 @@ struct GridSnapshot {
     ) -> GridSnapshot {
         let birthYear = GridMath.year(for: birthDate, calendar: calendar)
 
+        // Wins before the birth date are hidden (not deleted) — a win can't predate you.
         var memories: [GridPosition: Tier?] = [:]
-        for entry in entries where entry.kind == .win {
+        for entry in entries where entry.isValidWin(bornOn: birthDate) {
             let position = GridMath.position(for: entry.date, birthYear: birthYear, calendar: calendar)
             memories[position] = highestTier(memories[position] ?? nil, entry.tier)
         }
