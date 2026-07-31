@@ -71,6 +71,7 @@ struct JarView: View {
                     orbColors: wins.prefix(6).map { $0.tier?.color ?? EmberPalette.memoryNeutral },
                     animate: !reduceMotion
                 )
+                .tourTarget(.jar)
                 Text(countTitle)
                     .font(EmberTypography.heading)
                     .foregroundStyle(EmberPalette.ink)
@@ -91,6 +92,7 @@ struct JarView: View {
                 }
                 .disabled(wins.isEmpty)
                 .opacity(wins.isEmpty ? 0.5 : 1)
+                .tourTarget(.shake)
 
                 Button(action: { showAddWin = true }) {
                     Label("Add a win", systemImage: "plus")

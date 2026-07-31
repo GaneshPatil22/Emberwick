@@ -68,7 +68,9 @@ struct LifeLevelView: View {
                 onOpenYear: onOpenYear
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .tourTarget(.mapGrid)
             GridLegendView()
+                .tourTarget(.tiers)
         }
         .padding(.horizontal, EmberSpacing.xl)
         .padding(.top, EmberSpacing.lg)
@@ -113,5 +115,6 @@ struct LifeLevelView: View {
                 .background(EmberPalette.paper2, in: .rect(cornerRadius: EmberRadius.medium))
         }
         .accessibilityLabel("Eras")
+        .tourTarget(.eras)
     }
 }

@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage(AppConfig.birthDateKey) private var birthInterval = 0.0
     @AppStorage(AppConfig.birthDayKnownKey) private var birthDayKnown = true
     @AppStorage(EmberSound.enabledKey) private var soundEnabled = true
+    @AppStorage("tourRequested") private var tourRequested = false
 
     private var birthDateBinding: Binding<Date> {
         Binding(
@@ -63,6 +64,18 @@ struct SettingsView: View {
                         .tint(EmberPalette.accent)
                 } footer: {
                     Text("Soft chimes at moments like revealing a win. Always follows your silent switch.")
+                }
+
+                Section {
+                    Button {
+                        tourRequested = true
+                        dismiss()
+                    } label: {
+                        Label("Take a tour", systemImage: "sparkles")
+                            .foregroundStyle(EmberPalette.accentInk)
+                    }
+                } footer: {
+                    Text("A quick walkthrough of the map, tiers, eras, and the jar.")
                 }
             }
             .onChange(of: birthInterval) {
