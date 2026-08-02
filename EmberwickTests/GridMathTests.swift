@@ -70,4 +70,27 @@ struct GridMathTests {
         let position = GridMath.position(for: date(2022, 1, 8), birthYear: 1990, calendar: calendar)
         #expect(position == GridPosition(row: 32, column: 1))
     }
+
+    @Test("A week box maps to its exact 7-day calendar range")
+    func dateRangeIsExact() {
+        // Row 30 = 2020 (leap), column 20 → Jan 1 + 140 days = 20–26 May 2020.
+        let range = GridMath.dateRange(row: 30, column: 20, birthYear: 1990, calendar: calendar)
+        #expect(range.lowerBound == date(2020, 5, 20))
+        #expect(range.upperBound == date(2020, 5, 26))
+    }
+
+    @Test("The sliver box is clamped to the year's last day")
+    func dateRangeSliverClamped() {
+        // Row 32 = 2022 (non-leap), box 52 begins on day 365 = 31 Dec.
+        let range = GridMath.dateRange(row: 32, column: 52, birthYear: 1990, calendar: calendar)
+        #expect(range.upperBound == date(2022, 12, 31))
+    }
+
+    @Test("A representative date round-trips back to its own box")
+    func representativeRoundTrips() {
+        for column in [0, 1, 10, 26, 51, 52] {
+            let representative = GridMath.representativeDate(row: 30, column: column, birthYear: 1990, calendar: calendar)
+            #expect(GridMath.boxIndex(for: representative, calendar: calendar) == column)
+        }
+    }
 }

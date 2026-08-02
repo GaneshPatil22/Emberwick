@@ -19,6 +19,16 @@ Built for iOS with SwiftUI + SwiftData, iPhone-first, **private and on-device**.
 
 ---
 
+## 📸 See it
+
+| Life map (wins glow, eras band, "a year ago") | A week (exact dates) | The Jar |
+|---|---|---|
+| ![Life map](Screenshots/02-life-map.png) | ![A week](Screenshots/03-week-dates.png) | ![The Jar](Screenshots/04-jar.png) |
+| **Onboarding** | **Guided tour** | **Splash** |
+| ![Onboarding](Screenshots/06-onboarding.png) | ![Guided tour](Screenshots/05-tour.png) | ![Splash](Screenshots/01-splash.png) |
+
+---
+
 ## ✨ What makes it special
 
 Emberwick fuses two ideas that are weak alone:
@@ -273,6 +283,17 @@ First launch: animated splash → a short **skippable** intro → a **required b
 ## 🏠 Home-screen widget (one Xcode step)
 
 Widget code lives in [`EmberwickWidget/`](EmberwickWidget/) and reads a snapshot the app publishes. To enable: **File ▸ New ▸ Target ▸ Widget Extension** named `EmberwickWidget`, point it at that folder, and add the App Group `group.testing.Emberwick` to **both** the app and the widget target.
+
+## ✅ Tested
+
+The pure decision core is covered by fast, deterministic unit tests (Swift Testing, fixed UTC calendar + seeded RNG) — run with **⌘U**:
+
+- Day-of-year **week mapping** and exact **date ranges** (leap years, the sliver box, round-trips).
+- **Cell state** — before-birth, this-week, ahead, highest-tier memory, and pre-birth hiding.
+- **Jar** weighting favors long-unseen wins; **resurfacing** picks the right anniversary and excludes seen / same-year / future.
+- **Data export** produces well-formed JSON.
+
+*20 tests across 6 suites, all green.*
 
 ## ⚠️ Honest limitations
 
