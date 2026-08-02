@@ -10,6 +10,15 @@ Built for iOS with SwiftUI + SwiftData, iPhone-first, **private and on-device**.
 
 ---
 
+## 👤 Who it's for
+
+- **The person:** a thoughtful adult whose weeks blur together — *"where did the year even go?"* — and who quietly discounts their own progress.
+- **The situation:** the end of a long week, or a flat day, when the honest feeling is *"I haven't really done anything."*
+- **The problem:** the good stuff is real but **invisible** — scattered across the camera roll and memory, never seen in one place. Streak-and-metrics apps pile on guilt; journaling is a chore few sustain.
+- **The value:** a 10-second capture that (a) lights up the exact week on a map of your whole life, and (b) *comes back to you* later — a shake, or a home-screen glance, resurfaces a good moment you'd forgotten, **with when it happened**. Quiet proof your life is fuller than it feels.
+
+---
+
 ## ✨ What makes it special
 
 Emberwick fuses two ideas that are weak alone:
@@ -35,7 +44,7 @@ Emberwick fuses two ideas that are weak alone:
 | **Day-of-year week math** | `boxIndex = (dayOfYear − 1) / 7` — a January date never leaks into the previous year's row (ISO weeks rejected). |
 | **Pinch-zoom + pan** | Crisp magnify of the poster (the Canvas redraws at zoom), one row always = one year. |
 | **Zoom navigation** | Tap a cell → its **year** → a **week**, via native `.navigationTransition(.zoom)` flights. |
-| **Dateless week page** | Calm, full-screen page with an era chip, the week's entries, and "Add to this week." |
+| **Week page with exact dates** | Calm, full-screen page showing the week's precise range (e.g. "20–26 May 2020"), an era chip, its entries, and "Add to this week." |
 | **One unified entry** | `win` / `loss` / `note` — shared title/notes/images/date; wins get an optional one-tap **tier** (bronze → silver → gold → 💎 diamond). |
 | **Eras** | Soft, low-saturation tint bands behind the grid (a span), so bright wins (points) always pop above. |
 | **Memory-flight intro** | On launch, 15–25 memory cards fly up from the bottom and tuck into their weeks — reusable for the Jar reveal. |
@@ -213,9 +222,17 @@ EmberwickTests/     GridMathTests
 
 ## 🛠️ Tech stack
 
-- **SwiftUI** — grid `Canvas`, `matchedTransitionSource` + `.navigationTransition(.zoom)`, `MagnifyGesture`, `KeyframeAnimator` / `Animatable`.
-- **SwiftData** — persistence (CloudKit-ready for a fast-follow).
+Native Apple frameworks, each earning its place:
+
+- **SwiftUI** — grid `Canvas`, `matchedTransitionSource` + `.navigationTransition(.zoom)`, `MagnifyGesture`, `Animatable` flight motion, `TimelineView` confetti.
+- **SwiftData** — on-device persistence (a single shared container the app *and* the App Intent write to).
+- **WidgetKit** — home-screen "a year ago" / this-week widget, fed by an App Group snapshot.
+- **App Intents** — "Add a win" from Siri, Spotlight, and Shortcuts.
+- **Core Motion** — shake-to-reveal in the Jar.
 - **PhotosUI** — image attachment (compressed on import).
+- **Transferable + `ShareLink`** — private JSON data export.
+- **`ImageRenderer`** — the app icon is rendered from the same in-app brand mark.
+- **Accessibility** — Dynamic Type throughout, VoiceOver, Reduce Motion, `sensoryFeedback` haptics.
 - **Target:** iOS 26 · Swift 6.
 
 ## 🎨 Design system
@@ -231,13 +248,38 @@ Deliberately **not** the cream + serif + terracotta AI cliché. Warm and energet
 
 ---
 
-## 🚀 Getting started
+## 🚀 Run it in 60 seconds
 
 ```bash
 open Emberwick.xcodeproj      # Xcode 26+
-# Run the Emberwick scheme on an iOS 26 simulator.
-# A DEBUG demo persona is seeded on first launch so the grid is alive immediately.
+# Run the Emberwick scheme on an iOS 26 simulator or device.
 ```
+
+First launch: animated splash → a short **skippable** intro → a **required birthday** (the grid can't place your weeks without it, and no default is ever assumed) → the app, then a one-time **guided tour** of the map, tiers, eras, and jar. A DEBUG demo persona is seeded so the grid is alive immediately. Handy flags: `-skipSplash`, `-onboard` (replay intro), `-tour` (replay tour), `-noTour`.
+
+**The core loop to try:**
+1. **Map** → pinch into a year → tap a week → **Add to this week** (title + optional tier). The week lights up on the map.
+2. **Jar** → **Shake for a memory** (or tap) → a win rises out, grows, and is revealed *with when it happened* → **Put it back**.
+3. **Siri/Shortcuts:** "Add a win to Emberwick."
+4. **Settings** → **Export my data**, **Take a tour**, sound toggle, edit birthday.
+
+## ♿️ Accessibility & privacy
+
+- **Dynamic Type** everywhere — all text scales from one semantic token set (`EmberTypography`).
+- **VoiceOver** — the grid speaks a live summary (weeks lived, wins glowing); the Jar reveal is auto-focused and read aloud; the tour is modal and narrated.
+- **Reduce Motion** — every animation (flights, staged reveal, confetti, splash) has a calm fallback.
+- **Private by default** — 100% on-device, no accounts, no network. Your data leaves the phone only if *you* tap Export.
+
+## 🏠 Home-screen widget (one Xcode step)
+
+Widget code lives in [`EmberwickWidget/`](EmberwickWidget/) and reads a snapshot the app publishes. To enable: **File ▸ New ▸ Target ▸ Widget Extension** named `EmberwickWidget`, point it at that folder, and add the App Group `group.testing.Emberwick` to **both** the app and the widget target.
+
+## ⚠️ Honest limitations
+
+- Grid **per-week** VoiceOver is summary-level (the `Canvas` isn't a per-cell a11y tree yet); the accessible route to a specific memory is the Jar / week list.
+- Weeks are fixed **day-of-year** 7-day boxes (not ISO weeks) — a deliberate trade so a January date never leaks into the prior year's row.
+- On-device only; **no cloud sync/backup** yet (Export is the backup). SwiftData is CloudKit-ready for a fast-follow.
+- The widget needs the one-time target step above.
 
 ## 📚 More docs
 

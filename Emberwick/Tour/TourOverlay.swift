@@ -20,6 +20,8 @@ struct TourOverlay: View {
     private let inset: CGFloat = 10
     private let radius: CGFloat = 16
 
+    @AccessibilityFocusState private var captionFocused: Bool
+
     var body: some View {
         GeometryReader { geo in
             let hole = rect.insetBy(dx: -inset, dy: -inset)
@@ -35,6 +37,7 @@ struct TourOverlay: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture(perform: onNext)
+                    .accessibilityHidden(true)
 
                 RoundedRectangle(cornerRadius: radius)
                     .strokeBorder(EmberPalette.accent, lineWidth: 2)
@@ -53,6 +56,9 @@ struct TourOverlay: View {
             }
         }
         .ignoresSafeArea()
+        .accessibilityAddTraits(.isModal)
+        .onAppear { captionFocused = true }
+        .onChange(of: step.target) { captionFocused = true }
     }
 
     private var caption: some View {
@@ -60,6 +66,7 @@ struct TourOverlay: View {
             Text("Step \(index + 1) of \(total)")
                 .font(EmberTypography.caption)
                 .foregroundStyle(EmberPalette.inkFaint)
+                .accessibilityFocused($captionFocused)
             Text(step.title)
                 .font(EmberTypography.heading)
                 .foregroundStyle(EmberPalette.ink)

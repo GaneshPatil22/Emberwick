@@ -53,4 +53,20 @@ enum GridMath {
         let january1 = calendar.date(from: DateComponents(year: birthYear + row, month: 1, day: 1)) ?? .now
         return calendar.date(byAdding: .day, value: column * 7, to: january1) ?? january1
     }
+
+    /// The precise calendar date range a week box covers: its first day through its
+    /// last (the final box of a year is a 1–2 day sliver, clamped to Dec 31). Since
+    /// boxes are exact 7-day windows from Jan 1, this is accurate — not an estimate.
+    static func dateRange(
+        row: Int,
+        column: Int,
+        birthYear: Int,
+        calendar: Calendar = .current
+    ) -> ClosedRange<Date> {
+        let start = representativeDate(row: row, column: column, birthYear: birthYear, calendar: calendar)
+        let naturalEnd = calendar.date(byAdding: .day, value: 6, to: start) ?? start
+        // Clamp to the last day of the box's calendar year so the sliver box is honest.
+        let yearEnd = calendar.date(from: DateComponents(year: birthYear + row, month: 12, day: 31)) ?? naturalEnd
+        return start...min(naturalEnd, yearEnd)
+    }
 }

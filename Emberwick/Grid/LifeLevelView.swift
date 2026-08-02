@@ -90,10 +90,12 @@ struct LifeLevelView: View {
     private func pickResurfacedIfNeeded() {
         guard !didPickResurfaced, !entries.isEmpty else { return }
         didPickResurfaced = true
-        guard let win = ResurfacingSelector.resurfaced(
+        let win = ResurfacingSelector.resurfaced(
             wins: entries.validWins(bornOn: birthDate),
             today: .now
-        ) else { return }
+        )
+        WidgetBridge.publishResurfacing(win, now: .now) // keep the home-screen widget fresh
+        guard let win else { return }
         win.resurfacedAt = .now
         try? modelContext.save()
         resurfaced = win

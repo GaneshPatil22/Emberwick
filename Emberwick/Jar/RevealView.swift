@@ -19,6 +19,7 @@ struct RevealView: View {
     let onPutBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AccessibilityFocusState private var revealFocused: Bool
 
     private enum Stage { case bottom, mouth, center, revealed }
     @State private var stage: Stage = .bottom
@@ -59,8 +60,18 @@ struct RevealView: View {
         .task { await animateIn() }
         .sensoryFeedback(hapticFeedback, trigger: stage == .revealed)
         .onChange(of: stage) { _, newStage in
-            if newStage == .revealed { SoundPlayer.play(.reveal(win.tier)) }
+            if newStage == .revealed {
+                SoundPlayer.play(.reveal(win.tier))
+                revealFocused = true // move VoiceOver to the revealed memory
+            }
         }
+    }
+
+    /// The spoken form of the revealed memory.
+    private var accessibilityLabel: String {
+        var parts = ["A memory from your jar.", win.title + ".", metaText + "."]
+        if let notes = win.notes, !notes.isEmpty { parts.append(notes) }
+        return parts.joined(separator: " ")
     }
 
     // MARK: - Card
@@ -68,26 +79,34 @@ struct RevealView: View {
     private var card: some View {
         VStack(spacing: EmberSpacing.md) {
             orb
+                .accessibilityHidden(true)
             VStack(spacing: EmberSpacing.md) {
-                Text(metaText)
-                    .font(EmberTypography.caption)
-                    .foregroundStyle(EmberPalette.inkFaint)
-                Text(win.title)
-                    .font(EmberTypography.heading)
-                    .foregroundStyle(EmberPalette.ink)
-                    .multilineTextAlignment(.center)
-                if let notes = win.notes, !notes.isEmpty {
-                    Text(notes)
-                        .font(EmberTypography.body)
-                        .foregroundStyle(EmberPalette.inkSoft)
+                VStack(spacing: EmberSpacing.md) {
+                    Text(metaText)
+                        .font(EmberTypography.caption)
+                        .foregroundStyle(EmberPalette.inkFaint)
+                    Text(win.title)
+                        .font(EmberTypography.heading)
+                        .foregroundStyle(EmberPalette.ink)
                         .multilineTextAlignment(.center)
+                    if let notes = win.notes, !notes.isEmpty {
+                        Text(notes)
+                            .font(EmberTypography.body)
+                            .foregroundStyle(EmberPalette.inkSoft)
+                            .multilineTextAlignment(.center)
+                    }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(accessibilityLabel)
+                .accessibilityFocused($revealFocused)
+
                 Button("Put it back", action: putBack)
                     .font(EmberTypography.body)
                     .foregroundStyle(EmberPalette.accentInk)
                     .padding(.top, EmberSpacing.sm)
             }
             .opacity(stage == .revealed ? 1 : 0) // text appears only once grown
+            .accessibilityHidden(stage != .revealed)
         }
         .padding(EmberSpacing.xl)
         .frame(maxWidth: .infinity)

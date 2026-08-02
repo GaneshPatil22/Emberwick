@@ -19,6 +19,12 @@ struct GridSnapshot {
     /// the value is the best tier, or `nil` for an untiered win.
     private let memories: [GridPosition: Tier?]
 
+    /// Weeks holding at least one win (the glowing cells) — for the a11y summary.
+    var memoryCount: Int { memories.count }
+
+    /// Approximate count of weeks lived so far (row-major up to today).
+    var weeksLived: Int { today.row * GridConstants.columnsPerYear + today.column + 1 }
+
     func state(row: Int, column: Int) -> GridCellState {
         if row == 0, column < birthColumn {
             return .beforeBirth

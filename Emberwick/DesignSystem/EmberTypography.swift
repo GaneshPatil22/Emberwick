@@ -16,14 +16,18 @@ enum EmberTypography {
     /// Stand-in design for the body family (DM Sans).
     private static let bodyDesign: Font.Design = .rounded
 
+    // Built on semantic text styles (not fixed point sizes) so every label scales
+    // with the user's Dynamic Type setting. The chosen styles match the spec's
+    // intended sizes at the default content size.
+
     // Display / headings
-    static let title = Font.system(size: 28, weight: .heavy, design: displayDesign)
-    static let heading = Font.system(size: 24, weight: .bold, design: displayDesign)
-    static let entryTitle = Font.system(size: 16.5, weight: .semibold, design: displayDesign)
+    static let title = Font.system(.title, design: displayDesign, weight: .heavy)         // ~28
+    static let heading = Font.system(.title2, design: displayDesign, weight: .bold)        // ~22
+    static let entryTitle = Font.system(.callout, design: displayDesign, weight: .semibold) // ~16
 
     // Body
-    static let body = Font.system(size: 14, weight: .regular, design: bodyDesign)
-    static let subtitle = Font.system(size: 13.5, weight: .regular, design: bodyDesign)
-    static let caption = Font.system(size: 12, weight: .medium, design: bodyDesign)
-    static let legend = Font.system(size: 11.5, weight: .medium, design: bodyDesign)
+    static let body = Font.system(.subheadline, design: bodyDesign)                        // ~15
+    static let subtitle = Font.system(.footnote, design: bodyDesign)                       // ~13
+    static let caption = Font.system(.caption, design: bodyDesign, weight: .medium)        // ~12
+    static let legend = Font.system(.caption2, design: bodyDesign, weight: .medium)        // ~11
 }

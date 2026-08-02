@@ -12,15 +12,16 @@ import SwiftData
 enum EmberwickModelContainer {
     private static let schema = Schema([Entry.self, Era.self])
 
-    /// The persistent, on-disk container for the running app.
-    static func shared() -> ModelContainer {
+    /// The persistent, on-disk container for the running app — a single shared
+    /// instance so the app and the "Add a Win" App Intent write to the same store.
+    static let shared: ModelContainer = {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: configuration)
         } catch {
             fatalError("Failed to create the Emberwick model container: \(error)")
         }
-    }
+    }()
 
     /// An in-memory container pre-seeded with the demo persona, for previews.
     @MainActor

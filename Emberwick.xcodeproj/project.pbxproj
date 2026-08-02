@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E2973706301CE49C00DE35DB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2973705301CE49C00DE35DB /* WidgetKit.framework */; };
+		E2973708301CE49C00DE35DB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2973707301CE49C00DE35DB /* SwiftUI.framework */; };
+		E2973719301CE49D00DE35DB /* EmberwickWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E2973703301CE49C00DE35DB /* EmberwickWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		AA000000000000000000000B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -14,12 +20,47 @@
 			remoteGlobalIDString = E29732D93015EECD00DE35DB;
 			remoteInfo = Emberwick;
 		};
+		E2973717301CE49D00DE35DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E29732D23015EECD00DE35DB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E2973702301CE49C00DE35DB;
+			remoteInfo = EmberwickWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E297371E301CE49D00DE35DB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E2973719301CE49D00DE35DB /* EmberwickWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AA0000000000000000000009 /* EmberwickTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EmberwickTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E29732DA3015EECD00DE35DB /* Emberwick.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Emberwick.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2973703301CE49C00DE35DB /* EmberwickWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EmberwickWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2973705301CE49C00DE35DB /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		E2973707301CE49C00DE35DB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		E2973720301CE92000DE35DB /* EmberwickWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EmberwickWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E297371A301CE49D00DE35DB /* Exceptions for "EmberwickWidget" folder in "EmberwickWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E2973702301CE49C00DE35DB /* EmberwickWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AA0000000000000000000008 /* EmberwickTests */ = {
@@ -30,6 +71,14 @@
 		E29732DC3015EECD00DE35DB /* Emberwick */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Emberwick;
+			sourceTree = "<group>";
+		};
+		E2973709301CE49C00DE35DB /* EmberwickWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E297371A301CE49D00DE35DB /* Exceptions for "EmberwickWidget" folder in "EmberwickWidgetExtension" target */,
+			);
+			path = EmberwickWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -49,14 +98,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E2973700301CE49C00DE35DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2973708301CE49C00DE35DB /* SwiftUI.framework in Frameworks */,
+				E2973706301CE49C00DE35DB /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		E29732D13015EECD00DE35DB = {
 			isa = PBXGroup;
 			children = (
+				E2973720301CE92000DE35DB /* EmberwickWidgetExtension.entitlements */,
 				E29732DC3015EECD00DE35DB /* Emberwick */,
 				AA0000000000000000000008 /* EmberwickTests */,
+				E2973709301CE49C00DE35DB /* EmberwickWidget */,
+				E2973704301CE49C00DE35DB /* Frameworks */,
 				E29732DB3015EECD00DE35DB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -66,8 +127,18 @@
 			children = (
 				E29732DA3015EECD00DE35DB /* Emberwick.app */,
 				AA0000000000000000000009 /* EmberwickTests.xctest */,
+				E2973703301CE49C00DE35DB /* EmberwickWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E2973704301CE49C00DE35DB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E2973705301CE49C00DE35DB /* WidgetKit.framework */,
+				E2973707301CE49C00DE35DB /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -103,10 +174,12 @@
 				E29732D63015EECD00DE35DB /* Sources */,
 				E29732D73015EECD00DE35DB /* Frameworks */,
 				E29732D83015EECD00DE35DB /* Resources */,
+				E297371E301CE49D00DE35DB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E2973718301CE49D00DE35DB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E29732DC3015EECD00DE35DB /* Emberwick */,
@@ -117,6 +190,28 @@
 			productName = Emberwick;
 			productReference = E29732DA3015EECD00DE35DB /* Emberwick.app */;
 			productType = "com.apple.product-type.application";
+		};
+		E2973702301CE49C00DE35DB /* EmberwickWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E297371B301CE49D00DE35DB /* Build configuration list for PBXNativeTarget "EmberwickWidgetExtension" */;
+			buildPhases = (
+				E29736FF301CE49C00DE35DB /* Sources */,
+				E2973700301CE49C00DE35DB /* Frameworks */,
+				E2973701301CE49C00DE35DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E2973709301CE49C00DE35DB /* EmberwickWidget */,
+			);
+			name = EmberwickWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = EmberwickWidgetExtension;
+			productReference = E2973703301CE49C00DE35DB /* EmberwickWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -133,6 +228,9 @@
 						TestTargetID = E29732D93015EECD00DE35DB;
 					};
 					E29732D93015EECD00DE35DB = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					E2973702301CE49C00DE35DB = {
 						CreatedOnToolsVersion = 26.6;
 					};
 				};
@@ -153,6 +251,7 @@
 			targets = (
 				E29732D93015EECD00DE35DB /* Emberwick */,
 				AA0000000000000000000001 /* EmberwickTests */,
+				E2973702301CE49C00DE35DB /* EmberwickWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -166,6 +265,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E29732D83015EECD00DE35DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2973701301CE49C00DE35DB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -189,6 +295,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E29736FF301CE49C00DE35DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -196,6 +309,11 @@
 			isa = PBXTargetDependency;
 			target = E29732D93015EECD00DE35DB /* Emberwick */;
 			targetProxy = AA000000000000000000000B /* PBXContainerItemProxy */;
+		};
+		E2973718301CE49D00DE35DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E2973702301CE49C00DE35DB /* EmberwickWidgetExtension */;
+			targetProxy = E2973717301CE49D00DE35DB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -366,6 +484,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Emberwick/Emberwick.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A7WJZCL538;
@@ -398,6 +517,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Emberwick/Emberwick.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A7WJZCL538;
@@ -421,6 +541,68 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E297371C301CE49D00DE35DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = EmberwickWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A7WJZCL538;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EmberwickWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EmberwickWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = testing.Emberwick.EmberwickWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E297371D301CE49D00DE35DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = EmberwickWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A7WJZCL538;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EmberwickWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EmberwickWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = testing.Emberwick.EmberwickWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -451,6 +633,15 @@
 			buildConfigurations = (
 				E29732E63015EECE00DE35DB /* Debug */,
 				E29732E73015EECE00DE35DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E297371B301CE49D00DE35DB /* Build configuration list for PBXNativeTarget "EmberwickWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E297371C301CE49D00DE35DB /* Debug */,
+				E297371D301CE49D00DE35DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -5,11 +5,14 @@
 //  Minimal settings for v1: choose which mode the app opens to.
 //
 
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var entries: [Entry]
+    @Query private var eras: [Era]
     @AppStorage("homeMode") private var homeMode: HomeMode = .adaptive
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @AppStorage(AppConfig.birthDateKey) private var birthInterval = 0.0
@@ -76,6 +79,20 @@ struct SettingsView: View {
                     }
                 } footer: {
                     Text("A quick walkthrough of the map, tiers, eras, and the jar.")
+                }
+
+                Section {
+                    ShareLink(
+                        item: EmberExport(data: EmberExporter.json(entries: entries, eras: eras, now: .now)),
+                        preview: SharePreview("Emberwick export")
+                    ) {
+                        Label("Export my data", systemImage: "square.and.arrow.up")
+                            .foregroundStyle(EmberPalette.accentInk)
+                    }
+                } header: {
+                    Text("Your data")
+                } footer: {
+                    Text("A private JSON copy of everything you've saved. It never leaves your device unless you share it.")
                 }
             }
             .onChange(of: birthInterval) {

@@ -2,12 +2,12 @@
 //  WeekLevelView.swift
 //  Emberwick
 //
-//  The calm, full-screen, DATELESS week page. Shows an era chip (if the week is in
-//  an era), a soft title, the week's entries, and "Add to this week." A week is
-//  derived — all entries whose date maps to this (row, column).
+//  The calm, full-screen week page. Shows an era chip (if the week is in an era),
+//  a soft title, the week's precise date range, its entries, and "Add to this week."
+//  A week is derived — all entries whose date maps to this (row, column).
 //
-//  No dates by design: v1's divide-logic isn't calendar-accurate, so a shown date
-//  could mismatch. (Revisited in Phase F once weeks are calendar-accurate.)
+//  The date range is exact: week boxes are fixed 7-day windows from Jan 1 (see
+//  GridMath.dateRange), so the shown dates always match where the week sits.
 //
 
 import SwiftData
@@ -47,6 +47,14 @@ struct WeekLevelView: View {
         }
     }
 
+    /// The precise calendar range this week box covers, e.g. "12 Aug – 18 Aug 2024".
+    private var weekRangeText: String {
+        let range = GridMath.dateRange(row: position.row, column: position.column, birthYear: birthYear)
+        let start = range.lowerBound.formatted(.dateTime.day().month(.abbreviated))
+        let end = range.upperBound.formatted(.dateTime.day().month(.abbreviated).year())
+        return "\(start) – \(end)"
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: EmberSpacing.md) {
@@ -57,6 +65,9 @@ struct WeekLevelView: View {
                 Text("A week worth keeping")
                     .font(EmberTypography.heading)
                     .foregroundStyle(EmberPalette.ink)
+                Text(weekRangeText)
+                    .font(EmberTypography.caption)
+                    .foregroundStyle(EmberPalette.inkFaint)
                 Text(subtitle)
                     .font(EmberTypography.subtitle)
                     .foregroundStyle(EmberPalette.inkSoft)

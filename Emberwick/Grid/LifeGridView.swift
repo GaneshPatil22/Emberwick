@@ -36,7 +36,19 @@ struct LifeGridView: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Life grid. Each cell is one week; glowing cells hold a memory.")
+        .accessibilityAddTraits(.isImage)
+        .accessibilityLabel("Your life in weeks")
+        .accessibilityValue(accessibilitySummary)
+    }
+
+    /// A spoken summary of the grid — the per-cell visual isn't navigable, so we
+    /// describe the meaningful state and point to the accessible way to relive wins.
+    private var accessibilitySummary: String {
+        let wins = snapshot.memoryCount
+        let winsPhrase = wins == 0
+            ? "No weeks glow yet — add a win to light one up."
+            : "\(wins) \(wins == 1 ? "week glows" : "weeks glow") with a saved win."
+        return "About \(snapshot.weeksLived) weeks lived. \(winsPhrase) Open the Jar tab to relive one."
     }
 
     private func drawBand(_ band: EraBand, metrics: GridCanvasMetrics, context: inout GraphicsContext) {

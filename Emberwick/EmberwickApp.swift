@@ -13,7 +13,7 @@ struct EmberwickApp: App {
     private let container: ModelContainer
 
     init() {
-        let container = EmberwickModelContainer.shared()
+        let container = EmberwickModelContainer.shared
         #if DEBUG
         // Test hook: `-birthday=YYYY-MM-DD` sets the birthday from the app itself, so
         // @AppStorage reads it reliably (external `defaults write` doesn't propagate).
