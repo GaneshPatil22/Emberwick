@@ -50,39 +50,37 @@ Emberwick fuses two ideas that are weak alone:
 
 | Feature | Description |
 |---|---|
-| **Full-life grid** | 53 weeks × ~90 years, drawn with a single `Canvas` for performance. Memories glow in their tier color. |
-| **Day-of-year week math** | `boxIndex = (dayOfYear − 1) / 7` — a January date never leaks into the previous year's row (ISO weeks rejected). |
-| **Pinch-zoom + pan** | Crisp magnify of the poster (the Canvas redraws at zoom), one row always = one year. |
-| **Zoom navigation** | Tap a cell → its **year** → a **week**, via native `.navigationTransition(.zoom)` flights. |
-| **Week page with exact dates** | Calm, full-screen page showing the week's precise range (e.g. "20–26 May 2020"), an era chip, its entries, and "Add to this week." |
-| **One unified entry** | `win` / `loss` / `note` — shared title/notes/images/date; wins get an optional one-tap **tier** (bronze → silver → gold → 💎 diamond). |
-| **Eras** | Soft, low-saturation tint bands behind the grid (a span), so bright wins (points) always pop above. |
-| **Memory-flight intro** | On launch, 15–25 memory cards fly up from the bottom and tuck into their weeks — reusable for the Jar reveal. |
-| **The Jar** *(planned)* | Weighted shake surfaces a long-unseen win with tier-scaled delight; never deletes. |
-| **Local-first storage** | SwiftData now; CloudKit sync + JSON export as fast-follow. |
+| **Full-life grid** | 53 weeks × ~90 years, drawn with a single `Canvas` for performance. Wins glow in their tier color. |
+| **Exact week math** | Day-of-year 7-day boxes (`boxIndex = (dayOfYear − 1) / 7`) — a January date never leaks into the prior year's row. Each week page shows its **precise date range** ("20–26 May 2020"). |
+| **Pinch-zoom + zoom nav** | Magnify the poster (the Canvas redraws crisply); tap a cell → its **year** → a **week** via native `.navigationTransition(.zoom)` flights. |
+| **Entries & tiers** | One unified `win` / `loss` / `note` with title, notes, photos, date; wins get an optional one-tap **tier** (bronze → silver → gold → 💎 diamond). |
+| **Eras** | Soft, low-saturation tint bands behind the grid (a span) so bright wins (points) always pop above. |
+| **The Jar** | Shake (or tap) and a weighted, long-unseen win rises out of the jar, grows, and is revealed with **tier-scaled confetti + haptics**; "Put it back" sends it home. Never deletes. |
+| **Resurfacing** | A gentle *"you did this a year ago"* card, shown once so it never nags. |
+| **Required birthday** | The grid anchors to your real birthday (exact date, or just month & year) — **no default is ever assumed**. |
+| **First-run** | Animated splash (memories fly into the mark), a skippable value-prop intro, and a one-time **guided spotlight tour**. |
+| **Capture anywhere** | *"Add a win to Emberwick"* via **Siri, Spotlight, and Shortcuts** (App Intents). |
+| **Home-screen widget** | A glanceable *"a year ago"* / this-week nudge (WidgetKit + App Group). |
+| **Backup & restore** | Export everything to a private JSON file and import it back on a new phone — your birthday travels with it. |
 
 ---
 
-## 🚦 Current progress
+## 🚦 Status — complete
 
-Built in independently-testable phases (see [`BUILD_PLAN.md`](BUILD_PLAN.md)):
+Emberwick is **fully built and running** on iOS 26 / Swift 6. The whole loop works end to end, the app icon and brand mark are in, and the pure core is covered by **23 green unit tests**.
 
-| Phase | Feature | Status |
-|---|---|---|
-| 0 | Foundation — design tokens, models, grid math (verified) | ✅ Done |
-| 1 | Full-life grid render (seeded demo persona) | ✅ Done |
-| 2 | Zoom navigation (life → year → week) | ✅ Done |
-| 3 | Week page + add/edit entries (with photos) | ✅ Done |
-| ✨ | Signature memory-flight intro animation | ✅ Done |
-| 4 | Eras (create + tint bands) | ⬜ Planned |
-| 5 | The Jar (shake + reveal + haptics) | ⬜ Planned |
-| 6 | Adaptive home + Settings | ⬜ Planned |
-| 7 | Resurfacing ("you did this a year ago") | ⬜ Planned |
-| 8 | Onboarding + polish pass | ⬜ Planned |
-| 9 | Ship prep (icon, metadata, TestFlight) | ⬜ Planned |
-| F | Future: CloudKit sync, export, loss→win threads, widget | 🔮 Later |
+Everything below is shipped and in the app:
 
-**Verified:** builds clean (iOS 26 / Swift 6), grid-math unit tests green, core loop runs in the simulator.
+- ✅ Full-life grid · pinch-zoom · life → year → week zoom navigation
+- ✅ Entries (win / loss / note) · tiers · photos · eras
+- ✅ The Jar — weighted shake, staged reveal, tier confetti + haptics, "put it back"
+- ✅ Resurfacing ("a year ago") · adaptive home · Settings
+- ✅ Required birthday (exact or month/year) · birth-anchored grid
+- ✅ Animated splash · brand logo/app icon · skippable onboarding · guided tour · sounds
+- ✅ App Intent ("Add a win") · home-screen widget · JSON export **and** import/restore
+- ✅ Accessibility — Dynamic Type, VoiceOver, Reduce Motion; 100% on-device & private
+
+*(Built in independently-testable phases — see [`BUILD_PLAN.md`](BUILD_PLAN.md).)*
 
 ---
 
@@ -90,28 +88,31 @@ Built in independently-testable phases (see [`BUILD_PLAN.md`](BUILD_PLAN.md)):
 
 ```mermaid
 flowchart TD
-    Launch([App launch]) --> Intro[Memory-flight intro<br/>cards fly into their weeks]
-    Intro --> Life[["🗺️ Full-life grid (home)"]]
+    Launch([App launch]) --> Splash[✨ Animated splash]
+    Splash --> Intro[Skippable intro<br/>welcome · life · jar]
+    Intro --> Birthday{{"🎂 Set birthday<br/>(required, no default)"}}
+    Birthday --> Life[["🗺️ Full-life grid (home)"]]
+    Life -. first run .-> Tour[👀 Guided tour]
 
     Life -- pinch / drag --> Life
     Life -- tap a cell --> Year["📅 Year view<br/>(that year's 53 weeks)"]
-    Year -- tap a week --> Week["📖 Week page<br/>(dateless, entries)"]
-    Year -- back / pinch in --> Life
-    Week -- back --> Year
-
+    Year -- tap a week --> Week["📖 Week page<br/>(exact dates · entries)"]
     Week -- "Add to this week" --> Editor["✏️ Entry editor<br/>kind · title · notes · tier · photos"]
     Editor -- save --> Persist[(SwiftData)]
     Persist -- cell ignites --> Life
 
-    Jar["🫙 The Jar (planned)"] -. shake .-> Reveal["✨ Reveal a past win"]
-    Life -. bottom bar .-> Jar
+    Life -- bottom bar --> Jar["🫙 The Jar"]
+    Jar -- shake / tap --> Reveal["✨ A long-unseen win<br/>rises out · confetti"]
+    Reveal -- put it back --> Jar
+
+    Siri([Siri / Shortcuts]) -- "Add a win" --> Persist
 ```
 
 ---
 
 ## 🏗️ Architecture (class / view view)
 
-Pure functional core (grid math, snapshot, planners) with impurity pushed to the edges (SwiftData, photos, haptics). One type per file, feature-based folders.
+Pure functional core (grid math, snapshot, planners, selectors) with impurity pushed to the edges (SwiftData, photos, haptics). One type per file, feature-based folders. The diagram below highlights the **grid + animation core**; the Jar, resurfacing, onboarding, tour, export, and widget follow the same pure-core / thin-view pattern.
 
 ```mermaid
 classDiagram
@@ -215,17 +216,27 @@ classDiagram
 
 ```
 Emberwick/
-├── App/            AppConfig
-├── Models/         Entry · Era · EntryKind · Tier            (domain, pure)
-├── Grid/           GridMath · GridSnapshot · GridConstants · Canvas grid,
-│                   life/year/week views, MapView + zoom routing
+├── App/            AppConfig · RootView · SoundPlayer · tabs / home mode
+├── Models/         Entry · Era · EntryKind · Tier · BirthdayWin        (domain, pure)
+├── Grid/           GridMath · GridSnapshot · Canvas grid, life/year views, MapView + zoom
 ├── Week/           WeekLevelView · EntryEditView · rows, pills, era chip
+├── Jar/            JarView · JarSelector · RevealView · ConfettiView · ShakeDetector
+├── Eras/           EraListView · EraEditView · tint bands
+├── Resurfacing/    ResurfacingSelector · ResurfacingCard
+├── Onboarding/     OnboardingFlow · BirthdayGate · BirthdayField · FirstWinStep
+├── Tour/           Tour · TourOverlay              (guided spotlight)
+├── Brand/          EmberLogo · SplashView · IconExporter
 ├── Animation/      MemoryFlightView · FlightModifier · intro planner/overlay
+├── Export/         EmberExport / EmberExporter     (JSON export + restore)
+├── Intents/        AddWinIntent                    (Siri / Shortcuts)
+├── Widget/         WidgetBridge                    (App Group snapshot)
+├── Settings/       SettingsView
 ├── DesignSystem/   EmberPalette · Typography · Spacing · Radius · styles (tokens)
 ├── Persistence/    EmberwickModelContainer (SwiftData)
 ├── DevTools/       DemoPersona · DemoSeeder (seeded, #if DEBUG)
 └── Utilities/      ImageCompression
-EmberwickTests/     GridMathTests
+EmberwickWidget/    Home-screen widget target (WidgetKit)
+EmberwickTests/     GridMathTests · CoreLogicTests   (23 tests, Swift Testing)
 ```
 
 ---
@@ -271,7 +282,7 @@ First launch: animated splash → a short **skippable** intro → a **required b
 1. **Map** → pinch into a year → tap a week → **Add to this week** (title + optional tier). The week lights up on the map.
 2. **Jar** → **Shake for a memory** (or tap) → a win rises out, grows, and is revealed *with when it happened* → **Put it back**.
 3. **Siri/Shortcuts:** "Add a win to Emberwick."
-4. **Settings** → **Export my data**, **Take a tour**, sound toggle, edit birthday.
+4. **Settings** → **Export / restore your data**, **Take a tour**, sound toggle, edit birthday.
 
 ## ♿️ Accessibility & privacy
 
@@ -280,9 +291,9 @@ First launch: animated splash → a short **skippable** intro → a **required b
 - **Reduce Motion** — every animation (flights, staged reveal, confetti, splash) has a calm fallback.
 - **Private by default** — 100% on-device, no accounts, no network. Your data leaves the phone only if *you* tap Export.
 
-## 🏠 Home-screen widget (one Xcode step)
+## 🏠 Home-screen widget
 
-Widget code lives in [`EmberwickWidget/`](EmberwickWidget/) and reads a snapshot the app publishes. To enable: **File ▸ New ▸ Target ▸ Widget Extension** named `EmberwickWidget`, point it at that folder, and add the App Group `group.testing.Emberwick` to **both** the app and the widget target.
+The `EmberwickWidget` extension shows a glanceable *"a year ago"* win (or a this-week nudge). The app publishes a small snapshot to a shared **App Group** (`group.testing.Emberwick`); the widget reads it — no SwiftData access needed, so it stays fast and private.
 
 ## ✅ Tested
 
@@ -291,16 +302,27 @@ The pure decision core is covered by fast, deterministic unit tests (Swift Testi
 - Day-of-year **week mapping** and exact **date ranges** (leap years, the sliver box, round-trips).
 - **Cell state** — before-birth, this-week, ahead, highest-tier memory, and pre-birth hiding.
 - **Jar** weighting favors long-unseen wins; **resurfacing** picks the right anniversary and excludes seen / same-year / future.
-- **Data export** produces well-formed JSON.
+- **Export & restore** — well-formed JSON, id-based upsert (no duplicates), birthday round-trip, and duplicate birth-marker collapse.
 
-*20 tests across 6 suites, all green.*
+*23 tests across 6 suites, all green.*
 
-## ⚠️ Honest limitations
+## 🧭 Deliberate trade-offs
 
-- Grid **per-week** VoiceOver is summary-level (the `Canvas` isn't a per-cell a11y tree yet); the accessible route to a specific memory is the Jar / week list.
-- Weeks are fixed **day-of-year** 7-day boxes (not ISO weeks) — a deliberate trade so a January date never leaks into the prior year's row.
-- On-device only; **no cloud sync/backup** yet (Export is the backup). SwiftData is CloudKit-ready for a fast-follow.
-- The widget needs the one-time target step above.
+Scoped choices, not loose ends — each is a conscious call for a focused v1:
+
+- **iPhone-first.** The layout targets iPhone; iPad is a later adaptation.
+- **Day-of-year weeks** (not ISO) — a deliberate trade so a January date never leaks into the prior year's row.
+- **Grid VoiceOver is summary-level** — the `Canvas` speaks a live overview; the accessible route to a specific memory is the Jar and week list (per-cell navigation is a planned enhancement).
+- **Backup is manual** — export/import a private JSON file (photos stay on-device). Fully offline and account-free by design.
+
+## 🔭 Roadmap
+
+Natural next steps once past v1 — the groundwork is already in place:
+
+- **iCloud sync** — same Apple ID, new phone, data just appears. SwiftData is CloudKit-ready; it's a configuration + model-default change (no sync code).
+- **Per-cell grid VoiceOver** — full rotor navigation across weeks and wins.
+- **iPad & Mac Catalyst** layouts.
+- **Photos in export** and a lightweight loss → win "threads" view.
 
 ## 📚 More docs
 
