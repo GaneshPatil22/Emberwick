@@ -17,13 +17,15 @@ import SwiftData
 enum BirthdayWin {
     static let title = "My story begins"
 
-    /// Ensures exactly one birth-marker win exists at `birthDate` (creating it, or
-    /// moving the existing one).
+    /// Ensures EXACTLY ONE birth-marker win exists at `birthDate` — creating it,
+    /// moving the existing one, and deleting any accidental extras (e.g. after an
+    /// import). Only derived birth markers are ever removed, never real wins.
     @MainActor
     static func sync(to birthDate: Date, in context: ModelContext) {
-        let descriptor = FetchDescriptor<Entry>(predicate: #Predicate { $0.isBirthMarker })
-        if let existing = try? context.fetch(descriptor).first {
-            existing.date = birthDate
+        let markers = (try? context.fetch(FetchDescriptor<Entry>(predicate: #Predicate { $0.isBirthMarker }))) ?? []
+        if let keep = markers.first {
+            keep.date = birthDate
+            for extra in markers.dropFirst() { context.delete(extra) } // collapse duplicates
         } else {
             context.insert(Entry(date: birthDate, kind: .win, title: title, tier: .diamond, isBirthMarker: true))
         }

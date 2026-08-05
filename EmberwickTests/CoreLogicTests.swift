@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import SwiftData
 import Testing
 @testable import Emberwick
 
@@ -147,14 +148,87 @@ struct ExportTests {
         let win = Entry(date: d(2020, 1, 1), kind: .win, title: "Won", tier: .gold)
         let era = Era(name: "School", startDate: d(2005, 1, 1), endDate: d(2010, 1, 1), tintHex: "AABBCC")
 
-        let data = EmberExporter.json(entries: [win], eras: [era], now: d(2020, 1, 1))
+        let data = EmberExporter.json(entries: [win], eras: [era], birthDate: d(1990, 4, 12), birthDayKnown: true, now: d(2020, 1, 1))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
         #expect(object?["app"] as? String == "Emberwick")
+        #expect(object?["birthDate"] != nil) // the grid anchor travels with the backup
         let entries = object?["entries"] as? [[String: Any]]
         #expect(entries?.count == 1)
         #expect(entries?.first?["title"] as? String == "Won")
         #expect(entries?.first?["tier"] as? String == "gold")
         #expect((object?["eras"] as? [[String: Any]])?.count == 1)
+    }
+
+    @Test("Export then restore round-trips; re-restoring the same file adds nothing")
+    func exportRestoreRoundTrips() throws {
+        let container = try ModelContainer(
+            for: Entry.self, Era.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let win = Entry(date: d(2020, 1, 1), kind: .win, title: "Won", tier: .gold)
+        let birthMarker = Entry(date: d(1990, 4, 12), kind: .win, title: "My story begins", tier: .diamond, isBirthMarker: true)
+        let era = Era(name: "School", startDate: d(2005, 1, 1), endDate: d(2010, 1, 1), tintHex: "AABBCC")
+        let data = EmberExporter.json(entries: [win, birthMarker], eras: [era], birthDate: d(1990, 4, 12), birthDayKnown: false, now: d(2020, 1, 1))
+
+        let first = try EmberExporter.restore(from: data, into: context)
+        #expect(first.entriesAdded == 1) // the birth-marker win is excluded, not re-imported
+        #expect(first.erasAdded == 1)
+        #expect(first.birthDate == d(1990, 4, 12)) // birthday travels with the backup
+        #expect(first.birthDayKnown == false)
+
+        // Importing your own backup again is a safe no-op (matched by id).
+        let second = try EmberExporter.restore(from: data, into: context)
+        #expect(second.entriesAdded == 0)
+        #expect(second.erasAdded == 0)
+
+        let restored = try context.fetch(FetchDescriptor<Entry>())
+        #expect(restored.count == 1)
+        #expect(restored.first?.title == "Won")
+        #expect(restored.first?.tier == .gold)
+        #expect(restored.first?.id == win.id) // id preserved → dedup works
+    }
+
+    @Test("An older file (no birthDate) derives the DOB from its story-begins win")
+    func restoreDerivesBirthdayFromOldFile() throws {
+        let container = try ModelContainer(
+            for: Entry.self, Era.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        // A pre-fix export: no birthDate field, and the birth win stored as data.
+        let oldFile = """
+        {"app":"Emberwick","exportedAt":"2020-01-01T00:00:00Z","entries":[\
+        {"date":"1995-04-12T00:00:00Z","kind":"win","title":"My story begins","tier":"diamond"},\
+        {"date":"2005-01-01T00:00:00Z","kind":"win","title":"Real win","tier":"gold"}],"eras":[]}
+        """.data(using: .utf8)!
+
+        let summary = try EmberExporter.restore(from: oldFile, into: context)
+        #expect(summary.birthDate == d(1995, 4, 12)) // DOB recovered from the marker
+        #expect(summary.entriesAdded == 1)           // "story begins" is NOT re-imported
+
+        let stored = try context.fetch(FetchDescriptor<Entry>())
+        #expect(stored.map(\.title).sorted() == ["Real win"])
+    }
+
+    @Test("Syncing the birthday collapses duplicate birth markers to a single one")
+    func birthdaySyncCollapsesDuplicates() throws {
+        let container = try ModelContainer(
+            for: Entry.self, Era.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        context.insert(Entry(date: d(1980, 6, 1), kind: .win, title: BirthdayWin.title, tier: .diamond, isBirthMarker: true))
+        context.insert(Entry(date: d(1990, 1, 1), kind: .win, title: BirthdayWin.title, tier: .diamond, isBirthMarker: true))
+        try context.save()
+
+        BirthdayWin.sync(to: d(1995, 4, 12), in: context)
+
+        let markers = try context.fetch(FetchDescriptor<Entry>(predicate: #Predicate { $0.isBirthMarker }))
+        #expect(markers.count == 1)
+        #expect(markers.first?.date == d(1995, 4, 12))
     }
 }
