@@ -16,8 +16,12 @@ struct JarView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(AppConfig.birthDateKey) private var birthInterval = 0.0
+    @AppStorage(PresentationDefaults.rigDrawsKey) private var rigDraws = false
 
     @State private var revealedWin: Entry?
+    /// Bumped when a memory is drawn — a context-free trigger for the "leaving the jar"
+    /// haptic (reading `revealedWin?.id` would fault if the win was just deleted).
+    @State private var revealTick = 0
     @State private var showAddWin = false
     @State private var showSettings = false
     @State private var shakeDetector = ShakeDetector()
@@ -86,10 +90,11 @@ struct JarView: View {
                     Label("Shake for a memory", systemImage: "sparkles")
                         .font(EmberTypography.body)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, EmberSpacing.md)
-                        .foregroundStyle(.white)
-                        .background(EmberPalette.accent, in: .rect(cornerRadius: EmberRadius.medium))
+                        .padding(.vertical, EmberSpacing.xs)
                 }
+                .buttonStyle(.glassProminent)
+                .controlSize(.large)
+                .tint(EmberPalette.accent)
                 .disabled(wins.isEmpty)
                 .opacity(wins.isEmpty ? 0.5 : 1)
                 .tourTarget(.shake)
@@ -98,13 +103,11 @@ struct JarView: View {
                     Label("Add a win", systemImage: "plus")
                         .font(EmberTypography.body)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, EmberSpacing.md)
+                        .padding(.vertical, EmberSpacing.xs)
                         .foregroundStyle(EmberPalette.inkSoft)
-                        .background(
-                            RoundedRectangle(cornerRadius: EmberRadius.medium)
-                                .stroke(EmberPalette.line2, lineWidth: 1.5)
-                        )
                 }
+                .buttonStyle(.glass)
+                .controlSize(.large)
             }
             .padding(EmberSpacing.xl)
         }
@@ -119,9 +122,13 @@ struct JarView: View {
         }
         .overlay {
             if let win = revealedWin {
-                RevealView(win: win, jarSize: jarSize) { revealedWin = nil }
+                RevealView(win: win, jarSize: jarSize) {
+                    withAnimation(.easeInOut(duration: 0.25)) { revealedWin = nil }
+                }
+                .transition(.opacity)
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: revealTick) // a tick as it leaves the jar
         .sheet(isPresented: $showAddWin) {
             EntryEditView(existingEntry: nil, weekDate: .now)
         }
@@ -143,10 +150,23 @@ struct JarView: View {
     private func performShake() {
         guard revealedWin == nil, !wins.isEmpty else { return }
         var generator = SystemRandomNumberGenerator()
-        guard let win = JarSelector.pick(from: wins, now: .now, using: &generator) else { return }
+        guard let win = JarSelector.pick(from: drawPool, now: .now, using: &generator) else { return }
         win.lastSeenAt = .now
         try? modelContext.save()
-        revealedWin = win
+        revealTick += 1
+        withAnimation(.easeInOut(duration: 0.25)) { revealedWin = win } // fade the reveal in
+    }
+
+    /// Normally every win; in DEBUG presentation mode, only Diamond/Gold wins with a
+    /// photo — so every stage draw is a picture + big confetti. Falls back to all wins.
+    private var drawPool: [Entry] {
+        #if DEBUG
+        if rigDraws {
+            let rigged = wins.filter { !$0.imageData.isEmpty && ($0.tier == .diamond || $0.tier == .gold) }
+            if !rigged.isEmpty { return rigged }
+        }
+        #endif
+        return wins
     }
 
     // MARK: - Fill (memories flying into the jar)

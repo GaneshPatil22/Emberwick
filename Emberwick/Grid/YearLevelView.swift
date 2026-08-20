@@ -26,9 +26,14 @@ struct YearLevelView: View {
             LazyVGrid(columns: columns, spacing: EmberSpacing.sm) {
                 ForEach(0..<GridConstants.columnsPerYear, id: \.self) { column in
                     let position = GridPosition(row: row, column: column)
-                    YearWeekCell(state: snapshot.state(row: row, column: column))
+                    let state = snapshot.state(row: row, column: column)
+                    YearWeekCell(state: state)
                         .matchedTransitionSource(id: MapRoute.week(position), in: zoomNamespace)
                         .onTapGesture { onOpenWeek(position) }
+                        .accessibilityElement()
+                        .accessibilityLabel("Week \(column + 1), \(state.accessibilityDescription)")
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction { onOpenWeek(position) }
                 }
             }
 

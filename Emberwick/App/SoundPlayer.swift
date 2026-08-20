@@ -25,11 +25,11 @@ enum EmberSound {
     /// The system sound to play. Tune these freely.
     var systemSoundID: SystemSoundID {
         switch self {
-        case .reveal(.diamond): 1025 // fuller chime for the top tier  (alt: 1335, 1327)
-        case .reveal:           1057 // "Tink" — light positive chime   (alt: 1013 "Tock")
-        case .winSaved:         1057 // "Tink"
-        case .birthday:         1025 // celebratory                      (alt: 1330)
-        case .launch:           1103 // soft "begin"                     (alt: 1113)
+        // One warm "Tink" across every reveal and save, so the app speaks with a single
+        // voice. A bigger win isn't a *different* sound — its size is carried by the
+        // confetti and haptics, which already scale by tier. Keeps it cohesive.
+        case .reveal, .winSaved, .birthday: 1057 // "Tink" (alt family: 1013 "Tock")
+        case .launch:                       1103 // soft "begin" at app open
         }
     }
 }

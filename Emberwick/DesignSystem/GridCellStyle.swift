@@ -36,4 +36,15 @@ extension GridCellState {
         default: nil
         }
     }
+
+    /// Spoken description of a week's state, for VoiceOver.
+    var accessibilityDescription: String {
+        switch self {
+        case .beforeBirth: "before you were born"
+        case .ahead: "a future week"
+        case .thisWeek: "this week"
+        case .livedEmpty: "a lived week, no win yet"
+        case .memory(let tier): "\(tier?.displayName ?? "a") win"
+        }
+    }
 }

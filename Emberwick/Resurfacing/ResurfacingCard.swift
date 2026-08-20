@@ -14,7 +14,10 @@ struct ResurfacingCard: View {
     let onOpen: () -> Void
     let onDismiss: () -> Void
 
-    private var tierColor: Color { win.tier?.color ?? EmberPalette.memoryNeutral }
+    private var tierColor: Color {
+        guard !win.isDetached else { return EmberPalette.memoryNeutral }
+        return win.tier?.color ?? EmberPalette.memoryNeutral
+    }
 
     private var agoText: String {
         let years = Calendar.current.dateComponents([.year], from: win.date, to: .now).year ?? 1
@@ -44,7 +47,8 @@ struct ResurfacingCard: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(EmberPalette.inkFaint)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 44, height: 44) // ≥44pt hit target (HIG)
+                    .contentShape(.rect)
             }
             .accessibilityLabel("Dismiss")
         }

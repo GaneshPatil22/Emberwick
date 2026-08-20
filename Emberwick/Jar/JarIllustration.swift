@@ -28,22 +28,36 @@ struct JarIllustration: View {
         ZStack {
             Circle()
                 .fill(RadialGradient(
-                    colors: [EmberPalette.gold.opacity(0.28), .clear],
-                    center: .center, startRadius: 4, endRadius: 130
+                    colors: [EmberPalette.gold.opacity(0.38), .clear],
+                    center: .center, startRadius: 4, endRadius: 140
                 ))
-                .frame(width: 260, height: 260)
+                .frame(width: 270, height: 270)
                 .blur(radius: 6)
 
-            RoundedRectangle(cornerRadius: 28)
-                .fill(.white.opacity(0.45))
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [.white.opacity(0.32), .white.opacity(0.08)],
+                    startPoint: .top, endPoint: .bottom
+                ))
                 .frame(width: 150, height: 176)
-                .overlay(RoundedRectangle(cornerRadius: 28).stroke(Color(hex: 0xC9B49E), lineWidth: 3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .stroke(Color(hex: 0xC9B49E), lineWidth: 3)
+                )
+                .overlay(alignment: .top) {
+                    Capsule() // soft glass sheen just below the rim
+                        .fill(.white.opacity(0.4))
+                        .frame(width: 92, height: 10)
+                        .blur(radius: 6)
+                        .offset(y: 20)
+                }
                 .overlay(alignment: .top) {
                     Capsule()
                         .fill(Color(hex: 0xC9B49E))
                         .frame(width: 76, height: 14)
                         .offset(y: -7)
                 }
+                .shadow(color: EmberPalette.ink.opacity(0.06), radius: 12, y: 6)
 
             ForEach(orbColors.indices.prefix(slots.count), id: \.self) { index in
                 Circle()

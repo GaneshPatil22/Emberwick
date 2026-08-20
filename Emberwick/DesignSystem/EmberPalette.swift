@@ -18,7 +18,7 @@ enum EmberPalette {
     // Text
     static let ink = Color(lightHex: 0x34262C, darkHex: 0xF3EAE6)      // primary text
     static let inkSoft = Color(lightHex: 0x7B6A6F, darkHex: 0xB6A6AB)  // secondary text
-    static let inkFaint = Color(lightHex: 0xA99AA0, darkHex: 0x8A7A80) // hints
+    static let inkFaint = Color(lightHex: 0x7A6A70, darkHex: 0x9C8C92) // hints (WCAG-safe on paper)
 
     // Accent (this week + primary actions) — raspberry-coral
     static let accent = Color(hex: 0xF0567A)

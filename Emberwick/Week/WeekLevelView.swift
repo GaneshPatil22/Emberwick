@@ -31,7 +31,7 @@ struct WeekLevelView: View {
 
     private var weekEntries: [Entry] {
         allEntries
-            .filter { GridMath.position(for: $0.date, birthYear: birthYear) == position }
+            .filter { !$0.isDetached && GridMath.position(for: $0.date, birthYear: birthYear) == position }
             .sorted { $0.date < $1.date }
     }
 
@@ -81,10 +81,11 @@ struct WeekLevelView: View {
                     Label("Add to this week", systemImage: "plus")
                         .font(EmberTypography.body)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, EmberSpacing.md)
-                        .foregroundStyle(.white)
-                        .background(EmberPalette.accent, in: .rect(cornerRadius: EmberRadius.medium))
+                        .padding(.vertical, EmberSpacing.xs)
                 }
+                .buttonStyle(.glassProminent)
+                .controlSize(.large)
+                .tint(EmberPalette.accent)
                 .padding(.top, EmberSpacing.sm)
             }
             .padding(EmberSpacing.xl)

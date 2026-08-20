@@ -14,11 +14,16 @@ import SwiftData
 import UniformTypeIdentifiers
 
 /// A JSON blob the share sheet can write to a file / hand to another app.
+///
+/// The data is produced lazily — only when the system actually resolves the transfer
+/// (i.e. the user taps Share) — not when the `ShareLink` is built. Building it eagerly
+/// in a view body would re-serialize the whole store on every render and, worse, could
+/// read `@Query` models mid-deletion (a detached-fault crash right after a reset/wipe).
 struct EmberExport: Transferable {
-    let data: Data
+    let makeData: () -> Data
 
     static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .json) { $0.data }
+        DataRepresentation(exportedContentType: .json) { $0.makeData() }
             .suggestedFileName("emberwick-export.json")
     }
 }

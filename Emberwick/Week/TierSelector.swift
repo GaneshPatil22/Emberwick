@@ -24,6 +24,8 @@ struct TierSelector: View {
                             Circle()
                                 .strokeBorder(EmberPalette.ink, lineWidth: tier == option ? 3 : 0)
                         }
+                        .frame(width: 44, height: 44) // ≥44pt hit target (HIG)
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(option.displayName)

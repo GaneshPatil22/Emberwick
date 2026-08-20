@@ -15,6 +15,7 @@ struct RootView: View {
     var splashActive: Bool = false
 
     @Query private var entries: [Entry]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("homeMode") private var homeMode: HomeMode = .adaptive
     @AppStorage("didOnboard") private var didOnboard = false
     @AppStorage("didTour") private var didTour = false
@@ -23,7 +24,6 @@ struct RootView: View {
 
     @State private var selectedTab: AppTab = .map
     @State private var didSetInitialTab = false
-    @State private var didApplyDebugFlags = false
     @State private var firstRunStep: FirstRunStep?
 
     @State private var tourAnchors = TourAnchors()
@@ -45,6 +45,12 @@ struct RootView: View {
         tourActive && tourIndex < Tour.steps.count ? Tour.steps[tourIndex] : nil
     }
 
+    /// The app is "revealed" once the splash is gone, no first-run cover is up, and
+    /// the tour isn't running — the moment the grid's intro flight should play.
+    private var appReady: Bool {
+        !splashActive && firstRunStep == nil && !tourActive
+    }
+
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -57,6 +63,7 @@ struct RootView: View {
             }
             .tint(EmberPalette.accentInk)
             .environment(tourAnchors)
+            .environment(\.emberAppReady, appReady)
 
             if let step = currentTourStep, let rect = tourAnchors.frames[step.target] {
                 TourOverlay(
@@ -71,10 +78,9 @@ struct RootView: View {
             }
         }
         .coordinateSpace(.named(Tour.space))
-        .animation(EmberMotion.settle, value: tourIndex)
-        .animation(.easeInOut(duration: 0.25), value: tourActive)
+        .animation(reduceMotion ? nil : EmberMotion.settle, value: tourIndex)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: tourActive)
         .task(id: splashActive) {
-            applyDebugFlagsIfNeeded()
             setInitialTabIfNeeded()
             advanceFirstRun()
         }
@@ -118,9 +124,6 @@ struct RootView: View {
     /// Auto-runs the tour once, after the first-run gates are cleared.
     private func startTourIfNeeded() {
         guard !didTour, !tourActive else { return }
-        #if DEBUG
-        if CommandLine.arguments.contains("-noTour") { didTour = true; return }
-        #endif
         startTour()
     }
 
@@ -140,28 +143,12 @@ struct RootView: View {
     }
 
     private var shouldShowIntro: Bool {
-        #if DEBUG
-        if CommandLine.arguments.contains("-onboard") { return !didOnboard }
-        #endif
-        return !didOnboard && entries.isEmpty
-    }
-
-    /// DEBUG: `-onboard` replays the intro by clearing the completion flag once.
-    private func applyDebugFlagsIfNeeded() {
-        #if DEBUG
-        guard !didApplyDebugFlags else { return }
-        didApplyDebugFlags = true
-        if CommandLine.arguments.contains("-onboard") { didOnboard = false }
-        if CommandLine.arguments.contains("-tour") { didTour = false }
-        #endif
+        !didOnboard && entries.isEmpty
     }
 
     private func setInitialTabIfNeeded() {
         guard !didSetInitialTab else { return }
         didSetInitialTab = true
-        #if DEBUG
-        if CommandLine.arguments.contains("-openJar") { selectedTab = .jar; return }
-        #endif
         switch homeMode {
         case .grid:
             selectedTab = .map

@@ -38,7 +38,7 @@ enum Tour {
         TourStep(
             target: .tiers, tab: .map,
             title: "Wins that glow",
-            message: "Rate a win from bronze to diamond — the bigger it felt, the brighter it shines here."
+            message: "Rate a win from bronze to diamond — the bigger it felt, the brighter it shines. Tap the colour key any time to see what each glow means."
         ),
         TourStep(
             target: .eras, tab: .map,

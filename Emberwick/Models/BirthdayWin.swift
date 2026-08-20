@@ -34,10 +34,16 @@ enum BirthdayWin {
 }
 
 extension Entry {
+    /// True once the model has left its context (deleted or detached). Reading its
+    /// stored attributes afterward faults and crashes — a `@Query` can momentarily
+    /// still hand back such an object right after a wipe/reset, so guard reads with it.
+    /// `isDeleted` / `modelContext` are model metadata, not attributes, so safe to read.
+    var isDetached: Bool { isDeleted || modelContext == nil }
+
     /// A win is valid (shown, counted, jar-eligible) only from the birth date onward.
-    /// Non-wins are unaffected.
+    /// Non-wins are unaffected. Detached objects are never valid (guards stale reads).
     func isValidWin(bornOn birthDate: Date) -> Bool {
-        kind == .win && date >= birthDate
+        !isDetached && kind == .win && date >= birthDate
     }
 }
 

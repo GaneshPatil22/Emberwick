@@ -24,8 +24,15 @@ struct RevealView: View {
     private enum Stage { case bottom, mouth, center, revealed }
     @State private var stage: Stage = .bottom
     @State private var isClosing = false
+    @State private var showPhotos = false
+    @State private var shareImage: Image?
 
-    private var tierColor: Color { win.tier?.color ?? EmberPalette.memoryNeutral }
+    private var hasPhotos: Bool { !win.imageData.isEmpty }
+
+    private var tierColor: Color {
+        guard !win.isDetached else { return EmberPalette.memoryNeutral }
+        return win.tier?.color ?? EmberPalette.memoryNeutral
+    }
 
     private var glowRadius: Double {
         switch win.tier {
@@ -44,6 +51,16 @@ struct RevealView: View {
     }
 
     var body: some View {
+        // If the memory has left its context (e.g. deleted by a wipe/reset while the
+        // reveal is up), reading any of its attributes would fault — close cleanly.
+        if win.isDetached {
+            Color.clear.onAppear(perform: onPutBack)
+        } else {
+            revealContent
+        }
+    }
+
+    private var revealContent: some View {
         ZStack {
             Color.black.opacity(dimOpacity)
                 .ignoresSafeArea()
@@ -57,14 +74,35 @@ struct RevealView: View {
                 ConfettiBurst(tier: win.tier, origin: burstOrigin)
             }
         }
+        .accessibilityAddTraits(.isModal) // trap VoiceOver in the reveal
         .task { await animateIn() }
-        .sensoryFeedback(hapticFeedback, trigger: stage == .revealed)
+        .sensoryFeedback(trigger: stage) { _, newStage in
+            // A soft tick as it rises through the mouth and settles at center,
+            // then the tier-scaled haptic on the full reveal.
+            switch newStage {
+            case .mouth, .center: return .impact(weight: .light, intensity: 0.4)
+            case .revealed: return hapticFeedback
+            default: return nil
+            }
+        }
         .onChange(of: stage) { _, newStage in
             if newStage == .revealed {
                 SoundPlayer.play(.reveal(win.tier))
                 revealFocused = true // move VoiceOver to the revealed memory
+                renderShareCard()
             }
         }
+        .fullScreenCover(isPresented: $showPhotos) {
+            PhotoViewer(imageData: win.imageData) { showPhotos = false }
+        }
+    }
+
+    /// Renders the shareable memory card once, when revealed.
+    private func renderShareCard() {
+        guard !win.isDetached else { return }
+        let renderer = ImageRenderer(content: MemoryShareCard(win: win))
+        renderer.scale = 3
+        if let image = renderer.uiImage { shareImage = Image(uiImage: image) }
     }
 
     /// The spoken form of the revealed memory.
@@ -78,8 +116,13 @@ struct RevealView: View {
 
     private var card: some View {
         VStack(spacing: EmberSpacing.md) {
-            orb
-                .accessibilityHidden(true)
+            if stage == .revealed, hasPhotos {
+                RevealPhotoHero(imageData: win.imageData, tierColor: tierColor) { showPhotos = true }
+                    .transition(.opacity)
+            } else {
+                orb
+                    .accessibilityHidden(true)
+            }
             VStack(spacing: EmberSpacing.md) {
                 VStack(spacing: EmberSpacing.md) {
                     Text(metaText)
@@ -100,10 +143,22 @@ struct RevealView: View {
                 .accessibilityLabel(accessibilityLabel)
                 .accessibilityFocused($revealFocused)
 
-                Button("Put it back", action: putBack)
-                    .font(EmberTypography.body)
-                    .foregroundStyle(EmberPalette.accentInk)
-                    .padding(.top, EmberSpacing.sm)
+                HStack(spacing: EmberSpacing.xl) {
+                    if let shareImage {
+                        ShareLink(
+                            item: shareImage,
+                            preview: SharePreview(win.title, image: shareImage)
+                        ) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        .font(EmberTypography.body)
+                        .foregroundStyle(EmberPalette.accentInk)
+                    }
+                    Button("Put it back", action: putBack)
+                        .font(EmberTypography.body)
+                        .foregroundStyle(EmberPalette.accentInk)
+                }
+                .padding(.top, EmberSpacing.sm)
             }
             .opacity(stage == .revealed ? 1 : 0) // text appears only once grown
             .accessibilityHidden(stage != .revealed)
@@ -183,7 +238,9 @@ struct RevealView: View {
     }
 
     private func putBack() {
-        guard !isClosing else { return }
+        // Ignore taps during the rise — only a fully-revealed card can be put back.
+        // Prevents animateIn/animateOut fighting over `stage` (jitter + stray confetti).
+        guard stage == .revealed, !isClosing else { return }
         isClosing = true
         Task { await animateOut() }
     }

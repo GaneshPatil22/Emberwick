@@ -82,6 +82,8 @@ struct EraEditView: View {
                         .overlay {
                             Circle().strokeBorder(EmberPalette.ink, lineWidth: tintHex == hex ? 3 : 0)
                         }
+                        .frame(width: 44, height: 44) // ≥44pt hit target (HIG)
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Tint \(hex)")

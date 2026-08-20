@@ -2,13 +2,17 @@
 //  GridLegendView.swift
 //  Emberwick
 //
-//  The fixed-order legend: bronze, silver, gold, diamond, this week, ahead.
-//  Laid out as a 3-column grid so it reads left-to-right in that order.
+//  The colour key: bronze, silver, gold, diamond, this week, ahead. It's a reference,
+//  not a permanent fixture — so it's collapsed to a small pill by default and the user
+//  taps to reveal it when they need it. The choice persists.
 //
 
 import SwiftUI
 
 struct GridLegendView: View {
+    @AppStorage("legendExpanded") private var expanded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private let columns = Array(
         repeating: GridItem(.flexible(), alignment: .leading),
         count: 3
@@ -24,6 +28,17 @@ struct GridLegendView: View {
     ]
 
     var body: some View {
+        VStack(spacing: EmberSpacing.sm) {
+            if expanded {
+                swatches
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+            toggle
+        }
+        .animation(reduceMotion ? nil : EmberMotion.settle, value: expanded)
+    }
+
+    private var swatches: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: EmberSpacing.sm) {
             ForEach(entries) { entry in
                 HStack(spacing: EmberSpacing.xs) {
@@ -34,6 +49,26 @@ struct GridLegendView: View {
                 }
             }
         }
+    }
+
+    private var toggle: some View {
+        Button {
+            expanded.toggle()
+        } label: {
+            HStack(spacing: EmberSpacing.xs) {
+                Image(systemName: "paintpalette.fill")
+                Text(expanded ? "Hide colour key" : "Colour key")
+                Image(systemName: expanded ? "chevron.down" : "chevron.up")
+                    .font(.system(size: 9, weight: .semibold))
+            }
+            .font(EmberTypography.legend)
+            .foregroundStyle(EmberPalette.inkSoft)
+            .padding(.horizontal, EmberSpacing.md)
+            .padding(.vertical, EmberSpacing.xs)
+            .background(EmberPalette.paper2, in: .capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(expanded ? "Hide colour key" : "Show colour key")
     }
 }
 

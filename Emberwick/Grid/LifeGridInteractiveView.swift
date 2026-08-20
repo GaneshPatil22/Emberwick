@@ -23,6 +23,7 @@ struct LifeGridInteractiveView: View {
     let onOpenYear: (Int) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.emberAppReady) private var appReady
 
     @State private var viewport: CGSize = .zero
     @State private var zoom: Double = 1
@@ -81,6 +82,9 @@ struct LifeGridInteractiveView: View {
                 proxy.size
             } action: { newSize in
                 setViewport(newSize)
+            }
+            .onChange(of: appReady) { _, ready in
+                if ready { scheduleIntroIfNeeded() } // splash/first-run cleared → play now
             }
             .onTapGesture { location in
                 handleTap(at: location)
@@ -159,10 +163,13 @@ struct LifeGridInteractiveView: View {
     /// intro's animations get applied to the still-settling header/grid, sliding the
     /// whole content up on screen (the layout settling should be instant, not animated).
     private func scheduleIntroIfNeeded() {
-        guard !didScheduleIntro, !reduceMotion, viewport.width > 1, viewport.height > 1 else { return }
+        // Wait until the app is actually visible — otherwise the flight plays and
+        // finishes behind the splash / first-run covers and is never seen.
+        guard appReady, !didScheduleIntro, !reduceMotion, viewport.width > 1, viewport.height > 1 else { return }
         didScheduleIntro = true
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.4))
+            guard appReady else { didScheduleIntro = false; return } // re-covered; retry when ready
             startIntroIfNeeded()
         }
     }

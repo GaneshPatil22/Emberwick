@@ -77,4 +77,45 @@ enum DemoSeeder {
         default: nil
         }
     }
+
+    // MARK: - Presentation (DEBUG)
+
+    /// Deletes all entries and eras (does not touch UserDefaults / flags).
+    @MainActor
+    static func wipe(context: ModelContext) {
+        for entry in (try? context.fetch(FetchDescriptor<Entry>())) ?? [] { context.delete(entry) }
+        for era in (try? context.fetch(FetchDescriptor<Era>())) ?? [] { context.delete(era) }
+        try? context.save()
+    }
+
+    /// A curated, camera-ready dataset for the stage demo: the standard persona for a
+    /// rich map, plus a handful of Diamond/Gold **highlight wins with photos** that the
+    /// rigged jar draw pulls from. Set the birthday BEFORE calling this.
+    @MainActor
+    static func seedPresentation(context: ModelContext) {
+        seed(context: context, persona: .standard) // breadth: wins/losses/notes/eras
+
+        // Each highlight uses its own named image set (added to Assets by the
+        // presenter). Missing ones fall back to a gradient so nothing breaks.
+        let highlights: [(title: String, year: Int, month: Int, tier: Tier, asset: String)] = [
+            ("Our wedding day", 2016, 9, .diamond, "DemoWedding"),
+            ("Ran my first 10k", 2019, 5, .gold, "DemoRun"),
+            ("The trip to Japan", 2018, 4, .diamond, "DemoJapan"),
+            ("Landed the dream job", 2021, 10, .gold, "DemoJob"),
+            ("Summited the trail", 2022, 7, .gold, "DemoTrail"),
+            ("Bought our first home", 2023, 3, .diamond, "DemoHome")
+        ]
+        let calendar = Calendar.current
+        for h in highlights {
+            let date = calendar.date(from: DateComponents(year: h.year, month: h.month, day: 15)) ?? .now
+            context.insert(Entry(
+                date: date,
+                kind: .win,
+                title: h.title,
+                imageData: DemoPhotos.datas(baseNamed: h.asset),
+                tier: h.tier
+            ))
+        }
+        try? context.save()
+    }
 }

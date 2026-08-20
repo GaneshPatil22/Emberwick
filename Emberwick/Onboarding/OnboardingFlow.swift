@@ -31,27 +31,21 @@ struct OnboardingFlow: View {
     }
 
     var body: some View {
-        ZStack {
-            EmberPalette.paper.ignoresSafeArea()
-
-            VStack(spacing: EmberSpacing.lg) {
-                TabView(selection: $page) {
-                    welcomePage.tag(0)
-                    lifePage.tag(1)
-                    jarPage.tag(2)
-                    ScrollView {
-                        FirstWinStep(title: $winTitle, date: $winDate, tier: $winTier)
-                            .padding(.top, EmberSpacing.xl)
-                    }
-                    .tag(3)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(EmberMotion.settle, value: page)
-
-                footer
+        TabView(selection: $page) {
+            welcomePage.tag(0)
+            lifePage.tag(1)
+            jarPage.tag(2)
+            ScrollView {
+                FirstWinStep(title: $winTitle, date: $winDate, tier: $winTier)
+                    .padding(.horizontal, EmberSpacing.xl)
+                    .padding(.top, EmberSpacing.xl)
             }
-            .padding(EmberSpacing.xl)
+            .tag(3)
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .animation(EmberMotion.settle, value: page)
+        .background(EmberPalette.paper.ignoresSafeArea())
+        .safeAreaBar(edge: .bottom) { footer }
     }
 
     // MARK: - Pages
@@ -95,7 +89,7 @@ struct OnboardingFlow: View {
         VStack(spacing: EmberSpacing.xl) {
             Spacer(minLength: 0)
             illustration()
-                .frame(height: 220)
+                .frame(maxHeight: 220) // can shrink at large Dynamic Type so text never clips
             VStack(spacing: EmberSpacing.sm) {
                 Text(title)
                     .font(EmberTypography.title)
@@ -105,7 +99,7 @@ struct OnboardingFlow: View {
                     .foregroundStyle(EmberPalette.inkSoft)
             }
             .multilineTextAlignment(.center)
-            .padding(.horizontal, EmberSpacing.sm)
+            .padding(.horizontal, EmberSpacing.xl)
             Spacer(minLength: 0)
         }
     }
@@ -120,10 +114,11 @@ struct OnboardingFlow: View {
                 Text(page == lastPage ? (hasWin ? "Add & start" : "Skip for now") : "Continue")
                     .font(EmberTypography.body)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, EmberSpacing.md)
-                    .foregroundStyle(.white)
-                    .background(EmberPalette.accent, in: .rect(cornerRadius: EmberRadius.medium))
+                    .padding(.vertical, EmberSpacing.xs)
             }
+            .buttonStyle(.glassProminent)
+            .controlSize(.large)
+            .tint(EmberPalette.accent)
 
             Button("Skip") { finish(saveWin: false) }
                 .font(EmberTypography.caption)
@@ -131,6 +126,8 @@ struct OnboardingFlow: View {
                 .opacity(page == lastPage ? 0 : 1)
                 .disabled(page == lastPage)
         }
+        .padding(.horizontal, EmberSpacing.xl)
+        .padding(.bottom, EmberSpacing.xs)
     }
 
     private func advance() {

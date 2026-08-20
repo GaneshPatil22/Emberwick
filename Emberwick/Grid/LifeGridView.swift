@@ -83,10 +83,20 @@ struct LifeGridView: View {
         }
 
         if let glow = state.glowColor {
-            let glowRadius = min(rect.width * 0.7, 24)
+            let radius = min(rect.width * 0.95, 30)
+            // Wide, soft bloom.
             context.drawLayer { layer in
-                layer.addFilter(.shadow(color: glow.opacity(0.7), radius: glowRadius))
+                layer.addFilter(.shadow(color: glow.opacity(0.65), radius: radius))
                 layer.fill(path, with: .color(state.fillColor))
+            }
+            // The tight halo + bright rim only when cells are big enough (zoomed in) —
+            // at full-life zoom they'd read as speckle/noise.
+            if rect.width > 9 {
+                context.drawLayer { layer in
+                    layer.addFilter(.shadow(color: glow.opacity(0.95), radius: radius * 0.4))
+                    layer.fill(path, with: .color(state.fillColor))
+                }
+                context.stroke(path, with: .color(.white.opacity(0.3)), lineWidth: 0.6)
             }
         } else {
             context.fill(path, with: .color(state.fillColor))

@@ -20,6 +20,7 @@ struct ConfettiBurst: View {
     /// more reliable than `.onAppear` state writes inside a `TimelineView`.
     @State private var start: Date
     @State private var pieces: [ConfettiPiece]
+    @State private var finished = false
 
     /// - Parameters:
     ///   - tier: the win's tier, which picks the recipe.
@@ -32,17 +33,27 @@ struct ConfettiBurst: View {
     }
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            Canvas { context, _ in
-                let elapsed = timeline.date.timeIntervalSince(start)
-                guard elapsed <= style.duration else { return } // burst has settled
-                for piece in pieces {
-                    draw(piece, at: elapsed, context: context)
+        Group {
+            if finished {
+                Color.clear // stop the per-frame redraw once the burst has settled
+            } else {
+                TimelineView(.animation) { timeline in
+                    Canvas { context, _ in
+                        let elapsed = timeline.date.timeIntervalSince(start)
+                        guard elapsed <= style.duration else { return }
+                        for piece in pieces {
+                            draw(piece, at: elapsed, context: context)
+                        }
+                    }
+                    .ignoresSafeArea()
                 }
             }
-            .ignoresSafeArea()
         }
         .allowsHitTesting(false)
+        .task {
+            try? await Task.sleep(for: .seconds(style.duration + 0.15))
+            finished = true
+        }
     }
 
     private func draw(_ piece: ConfettiPiece, at t: Double, context: GraphicsContext) {

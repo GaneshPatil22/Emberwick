@@ -51,7 +51,9 @@ struct LifeLevelView: View {
                 addEraButton
             }
 
-            if let win = resurfaced {
+            // `resurfaced` is frozen in @State for the session, so it can outlive a
+            // wipe/reset — skip it once its backing model has left the context.
+            if let win = resurfaced, !win.isDetached {
                 ResurfacingCard(
                     win: win,
                     onOpen: { openResurfaced(win) },
